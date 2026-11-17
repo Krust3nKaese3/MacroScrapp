@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>EveryMacro</title>
+    <title>MacroScrapp</title>
     <style>
         * {
             margin: 0;
@@ -305,7 +305,7 @@
 </head>
 <body>
     <div class="header">
-        <h1>⚙️ EveryMacro</h1>
+        <h1>⚙️ MacroScrapp</h1>
         <div class="header-actions">
             <button class="icon-btn" id="showLogBtn" title="Log anzeigen">📋</button>
         </div>
@@ -313,11 +313,11 @@
 
     <div class="content">
         <div id="noBridgeWarning" class="warning" style="display: none;">
-            ⚠️ Bridge nicht verfügbar - App läuft außerhalb von EveryApp
+            ⚠️ Bridge nicht verfügbar - App läuft außerhalb von OpenScr
         </div>
 
         <div id="missingFeaturesWarning" class="warning" style="display: none;">
-            ⚠️ Einige Funktionen fehlen in dieser EveryApp-Version: <span id="missingFeaturesList"></span>
+            ⚠️ Einige Funktionen fehlen in dieser OpenScr-Version: <span id="missingFeaturesList"></span>
         </div>
 
         <div class="section">
@@ -410,7 +410,7 @@
                 <button class="small-btn" id="clearLogBtn">Löschen</button>
             </div>
             <div class="log-view" id="logView">
-                <div class="log-entry info">EveryMacro gestartet</div>
+                <div class="log-entry info">MacroScrapp gestartet</div>
             </div>
         </div>
     </div>
@@ -459,7 +459,9 @@
         // GLOBALS & STATE
         // ============================================================================
         
-        const hasBridge = typeof window.EveryAppBridge !== 'undefined';
+        // OpenScr setzt window.OpenScrBridge. Ältere Builds liefern nur window.EveryAppBridge (dasselbe Objekt).
+        const Bridge = window.OpenScrBridge || window.EveryAppBridge;
+        const hasBridge = typeof Bridge !== 'undefined';
         let macros = [];
         let globalLog = [];
         let runningIntervals = {};
@@ -467,24 +469,24 @@
         let hostHandlesTriggers = false;
         let backgroundEnabled = false;
         let appStartListenerActive = false;
-        const EM_VERSION = 'EveryMacro v2026-11-03b (Secrets)';
+        const EM_VERSION = 'MacroScrapp v2026-11-17';
         let editingMacroId = null;
         let secretValues = [];   // known secret values, only used to mask the log
         let secretsModalMacroId = null;
 
         // Feature detection
         const features = {
-            bluetooth: hasBridge && window.EveryAppBridge.bluetooth && 
-                      typeof window.EveryAppBridge.bluetooth.getConnectedDevices === 'function',
-            events: hasBridge && window.EveryAppBridge.events &&
-                   typeof window.EveryAppBridge.events.on === 'function',
-            http: hasBridge && window.EveryAppBridge.http &&
-                 typeof window.EveryAppBridge.http.request === 'function',
-            background: hasBridge && window.EveryAppBridge.background &&
-                       typeof window.EveryAppBridge.background.enable === 'function',
-            storage: hasBridge && window.EveryAppBridge.storage,
-            notifications: hasBridge && window.EveryAppBridge.notifications,
-            vibration: hasBridge && window.EveryAppBridge.vibration
+            bluetooth: hasBridge && Bridge.bluetooth && 
+                      typeof Bridge.bluetooth.getConnectedDevices === 'function',
+            events: hasBridge && Bridge.events &&
+                   typeof Bridge.events.on === 'function',
+            http: hasBridge && Bridge.http &&
+                 typeof Bridge.http.request === 'function',
+            background: hasBridge && Bridge.background &&
+                       typeof Bridge.background.enable === 'function',
+            storage: hasBridge && Bridge.storage,
+            notifications: hasBridge && Bridge.notifications,
+            vibration: hasBridge && Bridge.vibration
         };
 
         // ============================================================================
@@ -494,14 +496,14 @@
         init();
 
         async function init() {
-            document.getElementById('emVersion').textContent = EM_VERSION + ' · Secrets-Bridge: ' + ((window.EveryAppBridge && window.EveryAppBridge.secrets) ? 'ja' : 'nein (Fallback)');
+            document.getElementById('emVersion').textContent = EM_VERSION + ' · Secrets-Bridge: ' + ((Bridge && Bridge.secrets) ? 'ja' : 'nein (Fallback)');
             checkBridge();
             await loadMacros();
             initSecrets().catch(e => addLog("FEHLER Secrets laden: " + e.message, "error"));
             await loadBackgroundState();
             setupEventListeners();
             startActiveMacros();
-            addLog('EveryMacro initialisiert', 'info');
+            addLog('MacroScrapp initialisiert', 'info');
         }
 
         function checkBridge() {
@@ -551,7 +553,7 @@
                 if (!features.storage) {
                     macros = JSON.parse(localStorage.getItem('macros') || '[]');
                 } else {
-                    const data = await window.EveryAppBridge.storage.get('macros');
+                    const data = await Bridge.storage.get('macros');
                     macros = data ? JSON.parse(data) : [];
                 }
                 renderMacros();
@@ -566,7 +568,7 @@
                 if (!features.storage) {
                     localStorage.setItem('macros', data);
                 } else {
-                    await window.EveryAppBridge.storage.set('macros', data);
+                    await Bridge.storage.set('macros', data);
                 }
             } catch (error) {
                 addLog('Fehler beim Speichern der Makros: ' + error.message, 'error');
@@ -576,15 +578,15 @@
         async function loadBackgroundState() {
             try {
                 if (!features.background) return;
-                const enabled = await window.EveryAppBridge.background.isEnabled();
+                const enabled = await Bridge.background.isEnabled();
                 backgroundEnabled = !!enabled;
                 updateBackgroundUI(enabled);
-                if (typeof window.EveryAppBridge.background.handlesTriggers === 'function') {
-                    try { hostHandlesTriggers = !!(await window.EveryAppBridge.background.handlesTriggers()); } catch (e) { hostHandlesTriggers = false; }
+                if (typeof Bridge.background.handlesTriggers === 'function') {
+                    try { hostHandlesTriggers = !!(await Bridge.background.handlesTriggers()); } catch (e) { hostHandlesTriggers = false; }
                 }
-                if (hostHandlesTriggers && typeof window.EveryAppBridge.background.getLog === 'function') {
+                if (hostHandlesTriggers && typeof Bridge.background.getLog === 'function') {
                     try {
-                        const bgLog = JSON.parse(await window.EveryAppBridge.background.getLog() || '[]');
+                        const bgLog = JSON.parse(await Bridge.background.getLog() || '[]');
                         // oldest first so newest ends up on top
                         bgLog.slice(0, 20).reverse().forEach(e => addLog('[Hintergrund ' + e.timestamp + '] ' + e.message, e.level || 'info'));
                     } catch (e) { addLog('Hintergrund-Log nicht lesbar: ' + e.message, 'error'); }
@@ -674,7 +676,7 @@
             try {
                 const decl = saved ? declaredSecrets(saved) : [];
                 const miss = saved ? await missingSecrets(saved) : [];
-                addLog(`Secrets: ${decl.length} deklariert, ${miss.length} fehlen${miss.length ? ' (' + miss.join(', ') + ') → Dialog' : ''} [Bridge: ${hasHostSecrets() ? 'EveryApp secrets' : 'Fallback storage'}]`, 'info');
+                addLog(`Secrets: ${decl.length} deklariert, ${miss.length} fehlen${miss.length ? ' (' + miss.join(', ') + ') → Dialog' : ''} [Bridge: ${hasHostSecrets() ? 'OpenScr secrets' : 'Fallback storage'}]`, 'info');
                 if (miss.length) await openSecretsModal(savedId);
             } catch (e) {
                 addLog('FEHLER Secrets-Dialog: ' + e.message + ' | ' + EM_VERSION, 'error');
@@ -699,7 +701,7 @@
             if (/^[0-9a-f]{8,}$/i.test(s)) return { gist: s };
             let u;
             try { u = new URL(s); } catch (e) { throw new Error('Ungültige URL: ' + s); }
-            if (u.protocol === 'everyapp:' || u.protocol === 'exp+everyapp:') {
+            if (u.protocol === 'openscr:' || u.protocol === 'exp+openscr:' || u.protocol === 'everyapp:' || u.protocol === 'exp+everyapp:') {
                 const p = u.searchParams; if (p.get('gist')) return { gist: p.get('gist') }; if (p.get('url')) return resolveImportSource(p.get('url'));
                 throw new Error('Deep-Link ohne url= oder gist=: ' + s);
             }
@@ -712,7 +714,7 @@
         async function importHttpGet(url) {
             if (!/^https:\/\//i.test(url)) throw new Error('Nur https-URLs erlaubt: ' + url);
             let r;
-            if (features.http) r = await window.EveryAppBridge.http.request({ url, method: 'GET', headers: { Accept: 'application/vnd.github+json, text/plain, */*' } });
+            if (features.http) r = await Bridge.http.request({ url, method: 'GET', headers: { Accept: 'application/vnd.github+json, text/plain, */*' } });
             else { const f = await fetch(url); r = { status: f.status, body: await f.text() }; }
             if (r.status < 200 || r.status >= 300) throw new Error(`HTTP ${r.status} bei GET ${url}\n${String(r.body || '').slice(0, 300)}`);
             return String(r.body || '');
@@ -770,7 +772,7 @@
 
         function showImportError(msg) {
             const box = document.getElementById('importError');
-            const full = 'EveryMacro-Import-Fehler (' + EM_VERSION + '):\n' + msg;
+            const full = 'MacroScrapp-Import-Fehler (' + EM_VERSION + '):\n' + msg;
             document.getElementById('importErrorText').textContent = full;
             box.style.display = msg ? 'block' : 'none';
             if (msg) addLog(full, 'error');
@@ -789,12 +791,12 @@
         async function importFromClipboard() {
             showImportError('');
             let txt = null;
-            try { if (window.EveryAppBridge?.clipboard?.getString) txt = await window.EveryAppBridge.clipboard.getString(); } catch (e) {}
+            try { if (Bridge?.clipboard?.getString) txt = await Bridge.clipboard.getString(); } catch (e) {}
             try { if (txt == null && navigator.clipboard?.readText) txt = await navigator.clipboard.readText(); } catch (e) {}
             txt = String(txt ?? '').trim();
             if (!txt) { showImportError('Zwischenablage leer oder nicht lesbar'); return; }
-            // Clipboard may hold a link (https / everyapp:// / gist id) or the macro code itself
-            if (/^(https?:|everyapp:|exp\+everyapp:)/i.test(txt) || /^[0-9a-f]{8,}$/i.test(txt)) return importFrom(txt);
+            // Clipboard may hold a link (https / openscr:// / everyapp:// / gist id) or the macro code itself
+            if (/^(https?:|openscr:|exp\+openscr:|everyapp:|exp\+everyapp:)/i.test(txt) || /^[0-9a-f]{8,}$/i.test(txt)) return importFrom(txt);
             try { let n = 0; for (const c of importCodesFromText(txt)) { if (await upsertImportedMacro(c)) n++; } if (n) showToast(n + ' Makro(s) importiert'); }
             catch (e) { showImportError((e && e.message) || String(e)); }
         }
@@ -820,8 +822,11 @@
                 showToast(err ? 'Kopieren fehlgeschlagen – Text lange antippen' : 'Kopiert', !!err);
             });
             document.getElementById('importFolderBtn').addEventListener('click', () => importFromGitHubFolder(document.getElementById('folderUrlInput').value));
-            window.addEventListener('everyapp:deeplink', (e) => handleDeepLink(e.detail));
-            if (window.EveryAppLaunch) { const l = window.EveryAppLaunch; window.EveryAppLaunch = null; setTimeout(() => handleDeepLink(l), 500); }
+            const onDeepLink = (e) => handleDeepLink(e.detail);
+            window.addEventListener('openscr:deeplink', onDeepLink);
+            window.addEventListener('everyapp:deeplink', onDeepLink); // Alias älterer Builds
+            const launch = window.OpenScrLaunch || window.EveryAppLaunch;
+            if (launch) { window.OpenScrLaunch = null; window.EveryAppLaunch = null; setTimeout(() => handleDeepLink(launch), 500); }
             
             // Prefill GitHub folder input if in dev environment
             initDevEnvironmentDetection();
@@ -1034,16 +1039,16 @@
             
             if (isDev) {
                 const folderInput = document.getElementById('folderUrlInput');
-                folderInput.value = 'https://github.com/Krust3nKaese3/EveryMacro/tree/main/my-macros';
+                folderInput.value = 'https://github.com/Krust3nKaese3/MacroScrapp/tree/main/my-macros';
                 addLog('Dev-Umgebung erkannt - GitHub-Ordner-URL vorausgefüllt', 'info');
             }
         }
 
         function detectDevEnvironment() {
-            // Method 1: Check for EveryAppBridge.buildInfo or similar
-            if (hasBridge && window.EveryAppBridge.buildInfo) {
+            // Method 1: Check for OpenScrBridge.buildInfo or similar
+            if (hasBridge && Bridge.buildInfo) {
                 try {
-                    const buildInfo = window.EveryAppBridge.buildInfo;
+                    const buildInfo = Bridge.buildInfo;
                     if (buildInfo.isDev || buildInfo.environment === 'development' || buildInfo.devClient) {
                         return true;
                     }
@@ -1067,9 +1072,9 @@
                 return true;
             }
             
-            // Method 5: Check EveryAppBridge for any dev-related properties
-            if (hasBridge && window.EveryAppBridge) {
-                const bridge = window.EveryAppBridge;
+            // Method 5: Check OpenScrBridge for any dev-related properties
+            if (hasBridge && Bridge) {
+                const bridge = Bridge;
                 // Check various possible dev flags
                 if (bridge.isDevelopment || bridge.isDevBuild || bridge.devMode || 
                     (bridge.Constants && bridge.Constants.manifest && bridge.Constants.manifest.debuggerHost)) {
@@ -1220,25 +1225,25 @@
 
         async function toggleBackground() {
             if (!features.background) {
-                alert('Hintergrundmodus wird von dieser EveryApp-Version nicht unterstützt');
+                alert('Hintergrundmodus wird von dieser OpenScr-Version nicht unterstützt');
                 return;
             }
 
             try {
-                const currentState = await window.EveryAppBridge.background.isEnabled();
+                const currentState = await Bridge.background.isEnabled();
                 
                 if (currentState) {
-                    await window.EveryAppBridge.background.disable();
+                    await Bridge.background.disable();
                     backgroundEnabled = false;
                     updateBackgroundUI(false);
                     startActiveMacros();
                     addLog('Hintergrundmodus deaktiviert', 'info');
                 } else {
-                    await window.EveryAppBridge.background.enable();
+                    await Bridge.background.enable();
                     backgroundEnabled = true;
                     updateBackgroundUI(true);
                     addLog('Hintergrundmodus aktiviert', 'info');
-                    if (hostHandlesTriggers) addLog('Bluetooth-Trigger laufen jetzt in EveryApp (auch wenn geschlossen)', 'info');
+                    if (hostHandlesTriggers) addLog('Bluetooth-Trigger laufen jetzt in OpenScr (auch wenn geschlossen)', 'info');
                     startActiveMacros();
                 }
             } catch (error) {
@@ -1268,13 +1273,13 @@
             Object.keys(runningIntervals).forEach(id => stopMacro(id));
             
             if (bluetoothListenersActive && features.events) {
-                window.EveryAppBridge.events.off('bluetooth.connected');
-                window.EveryAppBridge.events.off('bluetooth.disconnected');
+                Bridge.events.off('bluetooth.connected');
+                Bridge.events.off('bluetooth.disconnected');
                 bluetoothListenersActive = false;
             }
             
             if (appStartListenerActive && features.events) {
-                window.EveryAppBridge.events.off('app.start');
+                Bridge.events.off('app.start');
                 appStartListenerActive = false;
             }
 
@@ -1292,7 +1297,7 @@
                             startIntervalTrigger(macro, trigger);
                         } else if (trigger.type === 'bluetoothConnected' || trigger.type === 'bluetoothDisconnected') {
                             if (hostHandlesTriggers && backgroundEnabled) {
-                                // EveryApp runs this trigger natively (also when closed) - avoid double execution
+                                // OpenScr runs this trigger natively (also when closed) - avoid double execution
                                 continue;
                             }
                             startBluetoothTrigger(macro, trigger);
@@ -1307,21 +1312,21 @@
         }
 
 
-        // Registers enabled macros as generic EveryApp background tasks (see EveryApp docs/BACKGROUND.md).
-        // Bluetooth + interval triggers then run in EveryApp, also when EveryMacro/EveryApp is closed.
+        // Registers enabled macros as generic OpenScr background tasks (see OpenScr docs/BACKGROUND.md).
+        // Bluetooth + interval triggers then run in OpenScr, also when MacroScrapp/OpenScr is closed.
         const BG_TRIGGERS = ['bluetoothConnected', 'bluetoothDisconnected', 'interval', 'quickTile', 'tileMenu', 'widgetAction', 'wifiChanged', 'bleNotify', 'popup'];
         async function syncBackgroundTasks(enabledMacros) {
-            if (!hostHandlesTriggers || typeof window.EveryAppBridge.background.registerTask !== 'function') return;
+            if (!hostHandlesTriggers || typeof Bridge.background.registerTask !== 'function') return;
             try {
-                await window.EveryAppBridge.background.unregisterAll();
+                await Bridge.background.unregisterAll();
                 const ui = { tiles: [], widgets: [] };
                 const pushUi = async () => {
-                    if (typeof window.EveryAppBridge.background.setUi !== 'function') {
-                        if (ui.tiles.length || ui.widgets.length) addLog('Kacheln/Widgets: EveryApp zu alt (braucht nächsten Build)', 'error');
+                    if (typeof Bridge.background.setUi !== 'function') {
+                        if (ui.tiles.length || ui.widgets.length) addLog('Kacheln/Widgets: OpenScr zu alt (braucht nächsten Build)', 'error');
                         return;
                     }
                     try {
-                        const r = await window.EveryAppBridge.background.setUi(ui);
+                        const r = await Bridge.background.setUi(ui);
                         (r && r.errors || []).forEach(e => addLog('FEHLER UI: ' + e, 'error'));
                         if (r && !r.native && (ui.tiles.length || ui.widgets.length)) addLog('Kacheln/Widgets gespeichert – Anzeige braucht nächsten Build', 'info');
                     } catch (e) { addLog('FEHLER Kacheln/Widgets: ' + e.message, 'error'); }
@@ -1337,19 +1342,22 @@
                     }
                     const triggers = (obj.triggers || []).filter(t => t && !t.kind && BG_TRIGGERS.includes(t.type));
                     if (triggers.length === 0) continue;
-                    await window.EveryAppBridge.background.registerTask({
+                    await Bridge.background.registerTask({
                         id: macro.id, name: macro.name, triggers, code: buildTaskCode(macro)
                     });
                 }
                 await pushUi();
-                addLog('Hintergrund-Tasks in EveryApp registriert', 'info');
+                addLog('Hintergrund-Tasks in OpenScr registriert', 'info');
             } catch (e) {
                 addLog('FEHLER beim Registrieren der Hintergrund-Tasks: ' + e.message, 'error');
             }
         }
 
         function buildTaskCode(macro) {
+            // Nativer Makro-Task: Body läuft als async (ctx, event) ohne window.
+            // Liegt die Bridge trotzdem auf globalThis, OpenScrBridge, sonst EveryAppBridge.
             return `
+const Bridge = (typeof globalThis !== 'undefined' && (globalThis.OpenScrBridge || globalThis.EveryAppBridge)) || null;
 const __code = ${JSON.stringify(macro.code)};
 const __dsl = {
   bluetoothConnected: (n = null) => ({ type: 'bluetoothConnected', nameOrAddress: n }),
@@ -1376,7 +1384,7 @@ ctx.vars = __px(__varsKey, __vars);
 let __g = {};
 try { __g = JSON.parse((await ctx.storage.get('macro_globals')) || '{}'); } catch (e) {}
 ctx.globals = __px('macro_globals', __g);
-if (!ctx.secrets) ctx.secrets = new Proxy({}, { get: (t, p) => { if (typeof p !== 'string' || p === 'then') return undefined; throw new Error('Secret ' + p + ' fehlt (EveryApp zu alt für ctx.secrets im Hintergrund)'); } });
+if (!ctx.secrets) ctx.secrets = new Proxy({}, { get: (t, p) => { if (typeof p !== 'string' || p === 'then') return undefined; throw new Error('Secret ' + p + ' fehlt (' + (Bridge ? 'OpenScrBridge ohne ctx.secrets' : 'OpenScr zu alt für ctx.secrets im Hintergrund') + ')'); } });
 ctx.device = event.device;
 ctx.trigger = ctx.trigger || { type: event.type, device: event.device, tile: event.tile };
 for (const c of (__m.conditions || [])) { if (!(await c(ctx))) { ctx.log('übersprungen (Bedingung nicht erfüllt)'); return; } }
@@ -1426,7 +1434,7 @@ await __m.actions(ctx);
                 ? 'bluetooth.connected' 
                 : 'bluetooth.disconnected';
 
-            window.EveryAppBridge.events.on(eventName, (device) => {
+            Bridge.events.on(eventName, (device) => {
                 if (trigger.nameOrAddress) {
                     if (deviceMatches(trigger.nameOrAddress, device)) {
                         executeMacro(macro, { trigger: trigger.type, device });
@@ -1442,7 +1450,7 @@ await __m.actions(ctx);
         function startAppStartTrigger(macro, trigger) {
             if (!features.events) return;
 
-            window.EveryAppBridge.events.on('app.start', () => {
+            Bridge.events.on('app.start', () => {
                 executeMacro(macro, { trigger: 'appStart' });
             });
 
@@ -1498,30 +1506,30 @@ await __m.actions(ctx);
                 log: (message) => addLog(`[${macro.name}] ${message}`, 'info'),
                 wait: (ms) => new Promise(resolve => setTimeout(resolve, ms)),
             };
-            const __bg = () => (window.EveryAppBridge && window.EveryAppBridge.background) || {};
-            const __need = (f) => { if (typeof __bg()[f] !== 'function') throw new Error('Kacheln/Widgets: EveryApp zu alt (braucht nächsten Build)'); return __bg()[f]; };
-            const __tl = (n) => { const b = window.EveryAppBridge; if (!b || typeof b.tile !== 'function') throw new Error('tile(n).set braucht nächsten Build'); return b.tile(n); };
+            const __bg = () => (Bridge && Bridge.background) || {};
+            const __need = (f) => { if (typeof __bg()[f] !== 'function') throw new Error('Kacheln/Widgets: OpenScr zu alt (braucht nächsten Build)'); return __bg()[f]; };
+            const __tl = (n) => { const b = Bridge; if (!b || typeof b.tile !== 'function') throw new Error('tile(n).set braucht nächsten Build'); return b.tile(n); };
             ctx.tile = Object.assign((n) => ({ set: (p) => __tl(n).set(p), get: () => __tl(n).get(), release: () => __tl(n).release() }), {
                 update: (s, p) => __need('tileUpdate')(s, p),
                 setState: (s, st) => __need('tileUpdate')(s, { state: (st === true || st === 'on') ? 'on' : 'off' }),
                 setLabel: (s, l) => __need('tileUpdate')(s, { label: String(l) }),
                 setIcon: (s, i) => __need('tileUpdate')(s, { icon: String(i) }),
             });
-            const __pp = (f) => (...a) => { const b = window.EveryAppBridge && window.EveryAppBridge.popup;
+            const __pp = (f) => (...a) => { const b = Bridge && Bridge.popup;
                 if (!b || typeof b[f] !== 'function') throw new Error('Popup braucht nächsten Build'); return b[f](...a); };
             ctx.popup = { open: __pp('open'), send: __pp('send'), close: __pp('close'), state: __pp('state') };
             ctx.widget = { update: (id, p) => __need('widgetUpdate')(id, p) };
-            const __ble = (f) => (...a) => { const b = window.EveryAppBridge && window.EveryAppBridge.ble;
+            const __ble = (f) => (...a) => { const b = Bridge && Bridge.ble;
                 if (!b || typeof b[f] !== 'function') throw new Error('BLE braucht nächsten Build'); return b[f](...a); };
             ctx.ble = { scan: __ble('scan'), connect: __ble('connect'), disconnect: __ble('disconnect'),
                 write: __ble('write'), read: __ble('read'), notify: __ble('notify') };
-            const __nb = (cat, f) => (...a) => { const b = window.EveryAppBridge && window.EveryAppBridge[cat];
+            const __nb = (cat, f) => (...a) => { const b = Bridge && Bridge[cat];
                 if (!b || typeof b[f] !== 'function') throw new Error('Raw-Netzwerk/Krypto (' + cat + '.' + f + ') braucht nächsten Build'); return b[f](...a); };
             ctx.net = { tcp: __nb('net', 'tcp'), udpSend: __nb('net', 'udpSend'), udpListen: __nb('net', 'udpListen'), tuyaDiscover: __nb('net', 'tuyaDiscover') };
             ctx.crypto = {}; ['aesEcb', 'aesGcm', 'hmacSha256', 'md5', 'crc32', 'randomHex'].forEach(f => { ctx.crypto[f] = __nb('crypto', f); });
             ctx.tuyaLocal = (cfg) => ({ status: () => __nb('net', 'tuyaStatus')(cfg), set: (dps) => __nb('net', 'tuyaSet')(cfg, dps) });
             ctx.wifi = { info: async () => {
-                const n = window.EveryAppBridge && window.EveryAppBridge.network;
+                const n = Bridge && Bridge.network;
                 if (!n || typeof n.getWifi !== 'function') return { ssid: null, bssid: null, error: 'WLAN-Info braucht nächsten Build' };
                 return await n.getWifi();
             } };
@@ -1530,7 +1538,7 @@ await __m.actions(ctx);
             if (features.http) {
                 ctx.http = {
                     request: async (options) => {
-                        const response = await window.EveryAppBridge.http.request(options);
+                        const response = await Bridge.http.request(options);
                         return response;
                     },
                     get: async (url) => {
@@ -1547,7 +1555,7 @@ await __m.actions(ctx);
             // Notifications
             if (features.notifications) {
                 ctx.notify = async (title, body) => {
-                    await window.EveryAppBridge.notifications.schedule(title, body, 0);
+                    await Bridge.notifications.schedule(title, body, 0);
                 };
             } else {
                 ctx.notify = async () => { throw new Error('Benachrichtigungen nicht verfügbar'); };
@@ -1556,14 +1564,14 @@ await __m.actions(ctx);
             // Vibration
             if (features.vibration) {
                 ctx.vibrate = (pattern) => {
-                    window.EveryAppBridge.vibration.vibrate(pattern);
+                    Bridge.vibration.vibrate(pattern);
                 };
             } else {
                 ctx.vibrate = () => { throw new Error('Vibration nicht verfügbar'); };
             }
 
             const mediaFn = (a) => async () => {
-                const m = window.EveryAppBridge && window.EveryAppBridge.media;
+                const m = Bridge && Bridge.media;
                 if (!m || typeof m[a] !== 'function') throw new Error('Media-Steuerung braucht nächsten Build');
                 await m[a]();
             };
@@ -1575,7 +1583,7 @@ await __m.actions(ctx);
             ctx.bluetooth = {
                 getConnectedDevices: async () => {
                     if (!features.bluetooth) throw new Error('Bluetooth-Bridge nicht verfügbar');
-                    return await window.EveryAppBridge.bluetooth.getConnectedDevices(false) || [];
+                    return await Bridge.bluetooth.getConnectedDevices(false) || [];
                 },
                 isConnected: async (x) => (await ctx.bluetooth.getConnectedDevices()).some(d => deviceMatches(x, d)),
             };
@@ -1584,15 +1592,15 @@ await __m.actions(ctx);
         }
 
         // Persistent vars: storage key "<key>" (per macro: macro_vars_<id>, global: macro_globals).
-        // Same keys as the EveryApp background engine -> shared between WebView and background runs.
-        // ---- Secrets: global per secret KEY (not per macro). Host: EveryAppBridge.secrets (lite = unverschlüsselt
+        // Same keys as the OpenScr background engine -> shared between WebView and background runs.
+        // ---- Secrets: global per secret KEY (not per macro). Host: OpenScrBridge.secrets (Fallback: EveryAppBridge) (lite = unverschlüsselt
         // app-intern, nächster Build = Android Keystore via expo-secure-store mit automatischer Migration).
-        const hasHostSecrets = () => !!(window.EveryAppBridge && window.EveryAppBridge.secrets);
+        const hasHostSecrets = () => !!(Bridge && Bridge.secrets);
         const Secrets = {
-            async get(k) { const v = hasHostSecrets() ? await window.EveryAppBridge.secrets.get(k) : await storageGet('secret_' + k); if (v) rememberSecret(v); return v || null; },
-            async set(k, v) { v = String(v || ''); if (!v) return Secrets.delete(k); rememberSecret(v); return hasHostSecrets() ? window.EveryAppBridge.secrets.set(k, v) : storageSet('secret_' + k, v); },
-            async delete(k) { return hasHostSecrets() ? window.EveryAppBridge.secrets.delete(k) : storageSet('secret_' + k, ''); },
-            async info() { try { return hasHostSecrets() ? await window.EveryAppBridge.secrets.info() : { encrypted: false, backend: 'lite (Mini-App-Speicher)' }; } catch (e) { return { encrypted: false, backend: 'lite' }; } },
+            async get(k) { const v = hasHostSecrets() ? await Bridge.secrets.get(k) : await storageGet('secret_' + k); if (v) rememberSecret(v); return v || null; },
+            async set(k, v) { v = String(v || ''); if (!v) return Secrets.delete(k); rememberSecret(v); return hasHostSecrets() ? Bridge.secrets.set(k, v) : storageSet('secret_' + k, v); },
+            async delete(k) { return hasHostSecrets() ? Bridge.secrets.delete(k) : storageSet('secret_' + k, ''); },
+            async info() { try { return hasHostSecrets() ? await Bridge.secrets.info() : { encrypted: false, backend: 'lite (OpenScrapp-Speicher)' }; } catch (e) { return { encrypted: false, backend: 'lite' }; } },
         };
         function rememberSecret(v) { if (v && v.length >= 3 && !secretValues.includes(v)) secretValues.push(v); }
         function maskSecrets(str) {
@@ -1659,7 +1667,7 @@ await __m.actions(ctx);
                 row.querySelector('.sec-show').onclick = () => { inp.type = inp.type === 'password' ? 'text' : 'password'; };
                 row.querySelector('.sec-paste').onclick = async () => {
                     let txt = null;
-                    try { if (window.EveryAppBridge?.clipboard?.getString) txt = await window.EveryAppBridge.clipboard.getString(); } catch (e) {}
+                    try { if (Bridge?.clipboard?.getString) txt = await Bridge.clipboard.getString(); } catch (e) {}
                     try { if (txt == null && navigator.clipboard?.readText) txt = await navigator.clipboard.readText(); } catch (e) {}
                     if (txt == null) { inp.focus(); alert('Einfügen nicht möglich – bitte lange ins Feld tippen und „Einfügen“ wählen.'); return; }
                     inp.value = String(txt).trim(); await save();
@@ -1691,8 +1699,8 @@ await __m.actions(ctx);
             if (open && macros.some(m => m.id === open)) openSecretsModal(open);
         }
 
-        async function storageGet(k) { return features.storage ? await window.EveryAppBridge.storage.get(k) : localStorage.getItem(k); }
-        async function storageSet(k, v) { return features.storage ? await window.EveryAppBridge.storage.set(k, v) : localStorage.setItem(k, v); }
+        async function storageGet(k) { return features.storage ? await Bridge.storage.get(k) : localStorage.getItem(k); }
+        async function storageSet(k, v) { return features.storage ? await Bridge.storage.set(k, v) : localStorage.setItem(k, v); }
         async function loadVarsProxy(key) {
             let data = {};
             try { data = JSON.parse((await storageGet(key)) || '{}') || {}; } catch (e) { addLog('Vars nicht lesbar (' + key + '): ' + e.message, 'error'); }
@@ -1711,11 +1719,11 @@ await __m.actions(ctx);
 
         async function loadBtDevices() {
             const list = document.getElementById('btDeviceList');
-            if (!features.bluetooth) { list.textContent = 'Bluetooth wird von dieser EveryApp-Version nicht unterstützt'; return; }
+            if (!features.bluetooth) { list.textContent = 'Bluetooth wird von dieser OpenScr-Version nicht unterstützt'; return; }
             list.textContent = 'Lade…';
             try {
                 const includePaired = document.getElementById('btIncludePaired').checked;
-                btDevices = await window.EveryAppBridge.bluetooth.getConnectedDevices(includePaired) || [];
+                btDevices = await Bridge.bluetooth.getConnectedDevices(includePaired) || [];
                 if (btDevices.length === 0) { list.textContent = 'Keine verbundenen Geräte gefunden.'; return; }
                 list.innerHTML = btDevices.map(d => `<div style="padding:6px 0;border-bottom:1px solid #333">
                     <b>${escHtml(d.alias || d.name)}</b> ${d.connected === false ? '(nicht verbunden)' : '🟢'}<br>
@@ -1728,7 +1736,7 @@ await __m.actions(ctx);
         }
 
         function btInfoText() {
-            const lines = ['Bluetooth-Geräte (EveryMacro, ' + new Date().toLocaleString('de-DE') + ')', ''];
+            const lines = ['Bluetooth-Geräte (MacroScrapp, ' + new Date().toLocaleString('de-DE') + ')', ''];
             btDevices.forEach((d, i) => {
                 lines.push(`Gerät ${i + 1}:`);
                 lines.push(`  Eigener Name (Alias): ${d.alias || d.name}`);
@@ -1739,7 +1747,7 @@ await __m.actions(ctx);
                 if (d.uuids && d.uuids.length) lines.push(`  UUIDs: ${d.uuids.join(', ')}`);
                 lines.push('');
             });
-            lines.push('Hinweis für die KI: EveryMacro-Makros (siehe MACROS.md im Repo Krust3nKaese3/EveryMacro). Trigger am besten per MAC-Adresse, z.B.');
+            lines.push('Hinweis für die KI: MacroScrapp-Makros (siehe MACROS.md im Repo Krust3nKaese3/MacroScrapp). Trigger am besten per MAC-Adresse, z.B.');
             lines.push(`  triggers: [bluetoothConnected("${btDevices[0] ? btDevices[0].address : 'AA:BB:CC:DD:EE:FF'}")]`);
             lines.push('Name/Alias funktionieren auch (Groß-/Kleinschreibung egal). ctx.device enthält name, alias, address, type, majorClass.');
             return lines.join('\n');
@@ -1773,12 +1781,12 @@ await __m.actions(ctx);
         async function copyText(text) {
             const errors = [];
             const execOk = execCopy(text);
-            const br = window.EveryAppBridge;
+            const br = Bridge;
             if (br && br.clipboard && typeof br.clipboard.setString === 'function') {
                 try { await br.clipboard.setString(text); return null; }
                 catch (e) { errors.push('Bridge clipboard.setString: ' + e.message); }
             } else {
-                errors.push('Bridge hat kein clipboard (EveryApp-JS veraltet? SrvEveryApp neu laden)');
+                errors.push('Bridge hat kein clipboard (OpenScr-JS veraltet? SrvOpenScr neu laden)');
             }
             if (execOk) return null;
             errors.push('execCommand(copy) fehlgeschlagen');
@@ -1820,7 +1828,7 @@ await __m.actions(ctx);
 
         async function httpReq(opts) {
             if (!features.http) throw new Error('HTTP-Bridge nicht verfügbar');
-            return await window.EveryAppBridge.http.request(opts);
+            return await Bridge.http.request(opts);
         }
 
         function getIpViaWebRTC() {
@@ -1853,7 +1861,7 @@ await __m.actions(ctx);
         async function loadNetInfo() {
             const el = document.getElementById('netInfo');
             el.textContent = 'Lade…'; net.errors = [];
-            const br = window.EveryAppBridge;
+            const br = Bridge;
             if (br && br.network && typeof br.network.getInfo === 'function') {
                 try {
                     const i = await br.network.getInfo();
@@ -1933,7 +1941,7 @@ await __m.actions(ctx);
         async function queryDevice() {
             const ip = document.getElementById('devIp').value.trim();
             const el = document.getElementById('devInfo');
-            try { if (features.storage) await window.EveryAppBridge.storage.set('net_device_ip', ip); else localStorage.setItem('net_device_ip', ip); } catch (e) {}
+            try { if (features.storage) await Bridge.storage.set('net_device_ip', ip); else localStorage.setItem('net_device_ip', ip); } catch (e) {}
             el.textContent = 'Frage ' + ip + ' ab …';
             const d = { ip, steps: [], isDenon: false, power: null, current: null, volume: null, sources: [] };
             const P = new DOMParser();
@@ -2007,12 +2015,12 @@ await __m.actions(ctx);
         }
 
         function netInfoText() {
-            const L = ['Netzwerk-Info (EveryMacro, ' + new Date().toLocaleString('de-DE') + ')', '',
+            const L = ['Netzwerk-Info (MacroScrapp, ' + new Date().toLocaleString('de-DE') + ')', '',
                 `WLAN-Name: ${net.ssid}`, `Access Point (BSSID): ${net.bssid || 'nicht verfügbar (braucht nächsten Build)'}`, ...(net.wifi ? [`Signal: ${net.wifi}`] : []), `Eigene IP: ${net.ownIp}`, `Gateway: ${net.gateway}`, `Quelle: ${net.source}`];
             if (net.errors.length) L.push('FEHLER: ' + net.errors.join(' | '));
             if (net.scan.length) { L.push('', 'Geräte im Netz (HTTP):'); net.scan.forEach(r => L.push(`  ${r.ip}  HTTP ${r.status}${r.server ? '  Server: ' + r.server : ''}${r.title ? '  „' + r.title + '“' : ''}`)); }
             if (net.device) { L.push('', deviceText(net.device)); }
-            L.push('', 'Hinweis für die KI (EveryMacro-Makros, siehe MACROS.md):');
+            L.push('', 'Hinweis für die KI (MacroScrapp-Makros, siehe MACROS.md):');
             const ip = net.device ? net.device.ip : '192.168.178.20';
             L.push(`- Aktuelle Denon-Quelle prüfen: const r = await ctx.http.get("http://${ip}/goform/formMainZone_MainZoneXml.xml"); dann <InputFuncSelect><value>…</value> aus r.body lesen (z.B. per Regex /<InputFuncSelect><value>([^<]*)/).`);
             L.push(`- Power prüfen: <Power><value>STANDBY|ON</value>. Einschalten: ctx.http.get("http://${ip}/goform/formiPhoneAppDirect.xml?ZMON"), Aus: ?ZMOFF (bzw. PWSTANDBY).`);
@@ -2031,8 +2039,8 @@ await __m.actions(ctx);
 
         // ---------------- BLE-Info ----------------
         const ble = { devices: [], dump: null, errors: [] };
-        const bleApi = () => { const b = window.EveryAppBridge && window.EveryAppBridge.ble;
-            if (!b || typeof b.scan !== 'function') throw new Error('BLE braucht nächsten Build (EveryApp zu alt)'); return b; };
+        const bleApi = () => { const b = Bridge && Bridge.ble;
+            if (!b || typeof b.scan !== 'function') throw new Error('BLE braucht nächsten Build (OpenScr zu alt)'); return b; };
         function escHtml(t) { return String(t ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
         async function bleScan() {
             const list = document.getElementById('bleList');
@@ -2072,12 +2080,12 @@ await __m.actions(ctx);
             return L.join('\n');
         }
         function bleInfoText() {
-            const L = ['BLE-Info (EveryMacro, ' + new Date().toLocaleString('de-DE') + ')', ''];
+            const L = ['BLE-Info (MacroScrapp, ' + new Date().toLocaleString('de-DE') + ')', ''];
             if (ble.errors.length) L.push('FEHLER: ' + ble.errors.join(' | '), '');
             L.push('Gefundene Geräte:');
             ble.devices.forEach(d => L.push(`  ${d.name || '(ohne Namen)'}  ${d.address}  ${d.rssi} dBm  Services: ${(d.serviceUuids || []).join(', ') || '-'}` + (d.manufacturerData ? '  MFR: ' + JSON.stringify(d.manufacturerData) : '')));
             if (ble.dump) L.push('', 'GATT-Dump:', bleDumpText(ble.dump));
-            L.push('', 'Hinweis für die KI (EveryMacro, siehe MACROS.md „BLE“):',
+            L.push('', 'Hinweis für die KI (MacroScrapp, siehe MACROS.md „BLE“):',
                 '- Schreiben: await ctx.ble.write(addr, serviceUuid, charUuid, [0x7e, ...] oder "7e0405...", { withResponse: false })',
                 '- Lesen: (await ctx.ble.read(addr, svc, chr)).hex ; Benachrichtigungen: await ctx.ble.notify(addr, svc, chr, true) + Trigger bleNotify(addr, charUuid), Wert in ctx.trigger.hex / ctx.trigger.bytes',
                 '- Das Protokoll der LED-Leiste (MeRGBW-App) ist unbekannt: aus Android-HCI-Snoop-Log (Wireshark, Filter btatt) ableiten.');
@@ -2093,7 +2101,7 @@ await __m.actions(ctx);
 
         async function initNetSection() {
             try {
-                const v = features.storage ? await window.EveryAppBridge.storage.get('net_device_ip') : localStorage.getItem('net_device_ip');
+                const v = features.storage ? await Bridge.storage.get('net_device_ip') : localStorage.getItem('net_device_ip');
                 if (v) document.getElementById('devIp').value = v;
             } catch (e) {}
             const wrap = (fn, name) => async () => { try { await fn(); } catch (e) { addLog(`FEHLER ${name}: ${e.message}`, 'error'); showToast(`FEHLER ${name}: ${e.message}`, true); } };
@@ -2125,7 +2133,7 @@ await __m.actions(ctx);
             return { type: 'interval', ms };
         }
 
-        // Quick-Settings-Kachel (Schnelleinstellungen). Läuft über EveryApp-Hintergrund (ab nächstem Build).
+        // Quick-Settings-Kachel (Schnelleinstellungen). Läuft über OpenScr-Hintergrund (ab nächstem Build).
         function quickTile(name) {
             return { type: 'quickTile', name };
         }
@@ -2134,7 +2142,7 @@ await __m.actions(ctx);
             return { type: 'manual' };
         }
 
-        // Kachel-Menü / Widget-Knopf / WLAN-Access-Point-Wechsel (EveryApp-Hintergrund, nächster Build)
+        // Kachel-Menü / Widget-Knopf / WLAN-Access-Point-Wechsel (OpenScr-Hintergrund, nächster Build)
         function tileMenu(id = null) { return { type: 'tileMenu', id }; }
         function widgetAction(id = null) { return { type: 'widgetAction', id }; }
         function wifiChanged(bssid = null) { return { type: 'wifiChanged', bssid }; }
@@ -2142,9 +2150,9 @@ await __m.actions(ctx);
         // UI-Deklarationen für macro({ ui: [tile({...}), widget({...})] })
         function tile(o) { return { kind: 'tile', ...o }; }
         function widget(o) { return { kind: 'widget', ...o }; }
-        // Popup-Trigger + Komponenten-Bibliothek für EveryApp-Popups (nächster Build)
+        // Popup-Trigger + Komponenten-Bibliothek für OpenScr-Popups (nächster Build)
         function popupEvent(popupId = null, event = null) { return { type: 'popup', popupId, event }; }
-        const POPUP_KIT_SRC = "function popupKit(spec) {\n  spec = spec || {};\n  var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>\"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '\"': '&quot;' }[c]; }); };\n  var items = JSON.stringify(spec.items || []).replace(/<\/g, '\\\\u003c');\n  var accent = spec.accent || '#7aa2ff';\n  return '<!doctype html><html><head><meta name=\"viewport\" content=\"width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no\"><style>'\n    + 'html,body{margin:0;background:transparent;color:#fff;font:15px system-ui,sans-serif;-webkit-user-select:none;user-select:none}'\n    + '.wrap{padding:14px 16px 16px}.t{font-size:17px;font-weight:600;margin:0 0 10px}.row{margin:12px 0}'\n    + '.lbl{display:flex;justify-content:space-between;opacity:.85;font-size:13px;margin-bottom:6px}'\n    + 'input[type=range]{width:100%;accent-color:' + accent + ';height:28px}'\n    + '.sw{display:flex;justify-content:space-between;align-items:center}.tg{width:52px;height:30px;border-radius:15px;background:#555;position:relative;transition:.2s}'\n    + '.tg:after{content:\"\";position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fff;transition:.2s}.tg.on{background:' + accent + '}.tg.on:after{left:25px}'\n    + '.btns{display:flex;flex-wrap:wrap;gap:8px}.btn{flex:1;min-width:70px;padding:10px;border-radius:12px;background:rgba(255,255,255,.14);text-align:center}.btn:active{background:rgba(255,255,255,.3)}'\n    + '.wheel{position:relative;margin:4px auto;touch-action:none}.wheel canvas{border-radius:50%;display:block}'\n    + '.knob{position:absolute;width:22px;height:22px;margin:-11px 0 0 -11px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 4px #000;pointer-events:none}'\n    + (spec.css || '') + '<\/style><\/head><body><div class=\"wrap\">'\n    + (spec.title ? '<div class=\"t\">' + esc(spec.title) + '<\/div>' : '') + '<div id=\"root\"><\/div><\/div><script>'\n    + '(function(){var P=window.EveryAppPopup||{state:{},send:function(e,v){console.log(\"send\",e,v)},onMessage:function(){},close:function(){}};'\n    + 'var items=' + items + ',st=P.state||{},root=document.getElementById(\"root\"),upd={};'\n    + 'function val(it,d){return st[it.id]!==undefined?st[it.id]:(it.value!==undefined?it.value:d);}'\n    + 'function hsv2rgb(h,s,v){s/=1000;v/=1000;var f=function(n){var k=(n+h/60)%6;return Math.round(255*(v-v*s*Math.max(0,Math.min(k,4-k,1))));};return \"rgb(\"+f(5)+\",\"+f(3)+\",\"+f(1)+\")\";}'\n    + 'function send(id,v){st[id]=v;P.send(id,v);}'\n    + 'items.forEach(function(it){var r=document.createElement(\"div\");r.className=\"row\";root.appendChild(r);'\n    + 'if(it.type===\"slider\"){var mn=it.min!=null?it.min:0,mx=it.max!=null?it.max:100;r.innerHTML=\"<div class=lbl><span><\/span><b><\/b><\/div><input type=range>\";'\n    + 'var i=r.querySelector(\"input\"),b=r.querySelector(\"b\");r.querySelector(\"span\").textContent=it.label||it.id;i.min=mn;i.max=mx;i.step=it.step||1;'\n    + 'var set=function(v){i.value=v;b.textContent=v+(it.unit||\"\");};set(val(it,mn));i.oninput=function(){b.textContent=i.value+(it.unit||\"\");send(it.id,Number(i.value));};upd[it.id]=set;}'\n    + 'else if(it.type===\"toggle\"){r.className=\"row sw\";r.innerHTML=\"<span><\/span><div class=tg><\/div>\";r.querySelector(\"span\").textContent=it.label||it.id;var g=r.querySelector(\".tg\");'\n    + 'var setT=function(v){g.classList.toggle(\"on\",!!v);};setT(val(it,false));g.onclick=function(){var v=!g.classList.contains(\"on\");setT(v);send(it.id,v);};upd[it.id]=setT;}'\n    + 'else if(it.type===\"buttons\"){r.className=\"row btns\";(it.items||[]).forEach(function(x){var d=document.createElement(\"div\");d.className=\"btn\";d.textContent=x.label||x.id;'\n    + 'd.onclick=function(){P.send(x.id,x.value!==undefined?x.value:true);if(x.close)P.close();};r.appendChild(d);});}'\n    + 'else if(it.type===\"colorWheel\"){var sz=it.size||220,w=document.createElement(\"div\");w.className=\"wheel\";w.style.width=w.style.height=sz+\"px\";'\n    + 'var c=document.createElement(\"canvas\"),k=document.createElement(\"div\");k.className=\"knob\";c.width=c.height=sz*2;c.style.width=c.style.height=sz+\"px\";w.appendChild(c);w.appendChild(k);r.appendChild(w);'\n    + 'var g2=c.getContext(\"2d\"),R=sz;for(var a=0;a<360;a+=1){var gr=g2.createLinearGradient(R,R,R+R*Math.cos(a*Math.PI/180),R+R*Math.sin(a*Math.PI/180));'\n    + 'gr.addColorStop(0,\"#fff\");gr.addColorStop(1,\"hsl(\"+a+\",100%,50%)\");g2.fillStyle=gr;g2.beginPath();g2.moveTo(R,R);g2.arc(R,R,R,(a-1)*Math.PI/180,(a+1)*Math.PI/180);g2.fill();}'\n    + 'var cur=Object.assign({h:0,s:1000,v:1000},val(it,{}));var place=function(o){cur=Object.assign(cur,o||{});var rr=cur.s/1000*sz/2,an=cur.h*Math.PI/180;'\n    + 'k.style.left=(sz/2+rr*Math.cos(an))+\"px\";k.style.top=(sz/2+rr*Math.sin(an))+\"px\";k.style.background=hsv2rgb(cur.h,cur.s,1000);};place();upd[it.id]=place;'\n    + 'var pick=function(e){var b=c.getBoundingClientRect(),x=e.clientX-b.left-sz/2,y=e.clientY-b.top-sz/2,h=(Math.atan2(y,x)*180/Math.PI+360)%360,s=Math.min(1,Math.sqrt(x*x+y*y)/(sz/2));'\n    + 'place({h:Math.round(h),s:Math.round(s*1000)});send(it.id,{h:cur.h,s:cur.s,v:cur.v});};'\n    + 'c.addEventListener(\"pointerdown\",function(e){c.setPointerCapture(e.pointerId);pick(e);});c.addEventListener(\"pointermove\",function(e){if(e.buttons)pick(e);});}'\n    + 'else if(it.type===\"html\"){r.innerHTML=it.html||\"\";}});'\n    + 'P.onMessage(function(d){for(var id in d){if(upd[id])upd[id](d[id]);}});'\n    + '})();<\/script><\/body><\/html>';\n}\n";
+        const POPUP_KIT_SRC = "function popupKit(spec) {\n  spec = spec || {};\n  var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>\"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '\"': '&quot;' }[c]; }); };\n  var items = JSON.stringify(spec.items || []).replace(/<\/g, '\\\\u003c');\n  var accent = spec.accent || '#7aa2ff';\n  return '<!doctype html><html><head><meta name=\"viewport\" content=\"width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no\"><style>'\n    + 'html,body{margin:0;background:transparent;color:#fff;font:15px system-ui,sans-serif;-webkit-user-select:none;user-select:none}'\n    + '.wrap{padding:14px 16px 16px}.t{font-size:17px;font-weight:600;margin:0 0 10px}.row{margin:12px 0}'\n    + '.lbl{display:flex;justify-content:space-between;opacity:.85;font-size:13px;margin-bottom:6px}'\n    + 'input[type=range]{width:100%;accent-color:' + accent + ';height:28px}'\n    + '.sw{display:flex;justify-content:space-between;align-items:center}.tg{width:52px;height:30px;border-radius:15px;background:#555;position:relative;transition:.2s}'\n    + '.tg:after{content:\"\";position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fff;transition:.2s}.tg.on{background:' + accent + '}.tg.on:after{left:25px}'\n    + '.btns{display:flex;flex-wrap:wrap;gap:8px}.btn{flex:1;min-width:70px;padding:10px;border-radius:12px;background:rgba(255,255,255,.14);text-align:center}.btn:active{background:rgba(255,255,255,.3)}'\n    + '.wheel{position:relative;margin:4px auto;touch-action:none}.wheel canvas{border-radius:50%;display:block}'\n    + '.knob{position:absolute;width:22px;height:22px;margin:-11px 0 0 -11px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 4px #000;pointer-events:none}'\n    + (spec.css || '') + '<\/style><\/head><body><div class=\"wrap\">'\n    + (spec.title ? '<div class=\"t\">' + esc(spec.title) + '<\/div>' : '') + '<div id=\"root\"><\/div><\/div><script>'\n    + '(function(){var P=window.OpenScrPopup||window.EveryAppPopup||{state:{},send:function(e,v){console.log(\"send\",e,v)},onMessage:function(){},close:function(){}};'\n    + 'var items=' + items + ',st=P.state||{},root=document.getElementById(\"root\"),upd={};'\n    + 'function val(it,d){return st[it.id]!==undefined?st[it.id]:(it.value!==undefined?it.value:d);}'\n    + 'function hsv2rgb(h,s,v){s/=1000;v/=1000;var f=function(n){var k=(n+h/60)%6;return Math.round(255*(v-v*s*Math.max(0,Math.min(k,4-k,1))));};return \"rgb(\"+f(5)+\",\"+f(3)+\",\"+f(1)+\")\";}'\n    + 'function send(id,v){st[id]=v;P.send(id,v);}'\n    + 'items.forEach(function(it){var r=document.createElement(\"div\");r.className=\"row\";root.appendChild(r);'\n    + 'if(it.type===\"slider\"){var mn=it.min!=null?it.min:0,mx=it.max!=null?it.max:100;r.innerHTML=\"<div class=lbl><span><\/span><b><\/b><\/div><input type=range>\";'\n    + 'var i=r.querySelector(\"input\"),b=r.querySelector(\"b\");r.querySelector(\"span\").textContent=it.label||it.id;i.min=mn;i.max=mx;i.step=it.step||1;'\n    + 'var set=function(v){i.value=v;b.textContent=v+(it.unit||\"\");};set(val(it,mn));i.oninput=function(){b.textContent=i.value+(it.unit||\"\");send(it.id,Number(i.value));};upd[it.id]=set;}'\n    + 'else if(it.type===\"toggle\"){r.className=\"row sw\";r.innerHTML=\"<span><\/span><div class=tg><\/div>\";r.querySelector(\"span\").textContent=it.label||it.id;var g=r.querySelector(\".tg\");'\n    + 'var setT=function(v){g.classList.toggle(\"on\",!!v);};setT(val(it,false));g.onclick=function(){var v=!g.classList.contains(\"on\");setT(v);send(it.id,v);};upd[it.id]=setT;}'\n    + 'else if(it.type===\"buttons\"){r.className=\"row btns\";(it.items||[]).forEach(function(x){var d=document.createElement(\"div\");d.className=\"btn\";d.textContent=x.label||x.id;'\n    + 'd.onclick=function(){P.send(x.id,x.value!==undefined?x.value:true);if(x.close)P.close();};r.appendChild(d);});}'\n    + 'else if(it.type===\"colorWheel\"){var sz=it.size||220,w=document.createElement(\"div\");w.className=\"wheel\";w.style.width=w.style.height=sz+\"px\";'\n    + 'var c=document.createElement(\"canvas\"),k=document.createElement(\"div\");k.className=\"knob\";c.width=c.height=sz*2;c.style.width=c.style.height=sz+\"px\";w.appendChild(c);w.appendChild(k);r.appendChild(w);'\n    + 'var g2=c.getContext(\"2d\"),R=sz;for(var a=0;a<360;a+=1){var gr=g2.createLinearGradient(R,R,R+R*Math.cos(a*Math.PI/180),R+R*Math.sin(a*Math.PI/180));'\n    + 'gr.addColorStop(0,\"#fff\");gr.addColorStop(1,\"hsl(\"+a+\",100%,50%)\");g2.fillStyle=gr;g2.beginPath();g2.moveTo(R,R);g2.arc(R,R,R,(a-1)*Math.PI/180,(a+1)*Math.PI/180);g2.fill();}'\n    + 'var cur=Object.assign({h:0,s:1000,v:1000},val(it,{}));var place=function(o){cur=Object.assign(cur,o||{});var rr=cur.s/1000*sz/2,an=cur.h*Math.PI/180;'\n    + 'k.style.left=(sz/2+rr*Math.cos(an))+\"px\";k.style.top=(sz/2+rr*Math.sin(an))+\"px\";k.style.background=hsv2rgb(cur.h,cur.s,1000);};place();upd[it.id]=place;'\n    + 'var pick=function(e){var b=c.getBoundingClientRect(),x=e.clientX-b.left-sz/2,y=e.clientY-b.top-sz/2,h=(Math.atan2(y,x)*180/Math.PI+360)%360,s=Math.min(1,Math.sqrt(x*x+y*y)/(sz/2));'\n    + 'place({h:Math.round(h),s:Math.round(s*1000)});send(it.id,{h:cur.h,s:cur.s,v:cur.v});};'\n    + 'c.addEventListener(\"pointerdown\",function(e){c.setPointerCapture(e.pointerId);pick(e);});c.addEventListener(\"pointermove\",function(e){if(e.buttons)pick(e);});}'\n    + 'else if(it.type===\"html\"){r.innerHTML=it.html||\"\";}});'\n    + 'P.onMessage(function(d){for(var id in d){if(upd[id])upd[id](d[id]);}});'\n    + '})();<\/script><\/body><\/html>';\n}\n";
         const popupKit = new Function(POPUP_KIT_SRC + '; return popupKit;')();
 
         // ============================================================================

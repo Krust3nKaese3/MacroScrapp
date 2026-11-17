@@ -1,8 +1,10 @@
-# EveryMacro - Makro-DSL Dokumentation
+# MacroScrapp - Makro-DSL Dokumentation
 
-## Für AI-Assistenten: So schreibst du Makros für EveryMacro
+## Für AI-Assistenten: So schreibst du Makros für MacroScrapp
 
-Diese Dokumentation beschreibt das vollständige DSL (Domain Specific Language) für EveryMacro. Du kannst Makros erstellen, die automatisch auf Ereignisse reagieren und Aktionen ausführen.
+Diese Dokumentation beschreibt das vollständige DSL (Domain Specific Language) für MacroScrapp. Du kannst Makros erstellen, die automatisch auf Ereignisse reagieren und Aktionen ausführen.
+
+Die Geräte-Bridge heißt `window.OpenScrBridge`. `window.EveryAppBridge` ist dasselbe Objekt und bleibt der Alias für ältere OpenScr-Builds. Im Hintergrund-Task gibt es kein `window`. OpenScr führt den Task-Body als `async (ctx, event)` aus. Liegt die Bridge dort auf `globalThis`, gilt ebenfalls `globalThis.OpenScrBridge || globalThis.EveryAppBridge`. Das Manifest ist `openscr.json`. `everyapp.json` wird nur gelesen, wenn keine `openscr.json` im Repository liegt. In diesem Repo sind beide Dateien identisch.
 
 ---
 
@@ -70,7 +72,7 @@ bluetoothDisconnected()
 
 ### `appStart()`
 
-Wird ausgelöst, wenn EveryApp gestartet wird (funktioniert nur im Hintergrundmodus).
+Wird ausgelöst, wenn OpenScr gestartet wird (funktioniert nur im Hintergrundmodus).
 
 **Beispiel:**
 ```javascript
@@ -505,7 +507,7 @@ macro({
 
 ## Bekannte Einschränkungen
 
-1. **Bluetooth-Events** erfordern die neue EveryApp-Version mit Events-API
+1. **Bluetooth-Events** erfordern die neue OpenScr-Version mit Events-API
 2. **Hintergrundmodus** muss aktiviert sein für appStart() und Interval-Trigger
 3. **HTTP-Requests** sind auf das lokale Netzwerk beschränkt (meist keine externen APIs ohne CORS)
 4. **Variablen** (`ctx.vars`) haben keine Größenbeschränkung, aber sollten sparsam verwendet werden
@@ -535,12 +537,12 @@ macro({
 
 ## Hintergrundausführung
 
-Ist der **Hintergrundmodus** an, führt EveryApp Makros mit `bluetoothConnected()` / `bluetoothDisconnected()` selbst aus –
-auch wenn EveryMacro geschlossen ist, EveryApp im Hintergrund läuft oder aus den letzten Apps weggewischt wurde.
-EveryMacro registriert dafür jedes aktivierte Makro über die generische EveryApp-API `background.registerTask` (siehe EveryApp docs/BACKGROUND.md). In der Hintergrundausführung gibt es `ctx.log`, `ctx.wait`, `ctx.http.get/request`,
+Ist der **Hintergrundmodus** an, führt OpenScr Makros mit `bluetoothConnected()` / `bluetoothDisconnected()` selbst aus –
+auch wenn MacroScrapp geschlossen ist, OpenScr im Hintergrund läuft oder aus den letzten Apps weggewischt wurde.
+MacroScrapp registriert dafür jedes aktivierte Makro über die generische OpenScr-API `background.registerTask` (siehe OpenScr docs/BACKGROUND.md). In der Hintergrundausführung gibt es `ctx.log`, `ctx.wait`, `ctx.http.get/request`,
 `ctx.notify`, `ctx.vibrate`, `ctx.vars` und zusätzlich `ctx.device` ({name, address}).
-Hintergrund-Logs erscheinen beim nächsten Öffnen von EveryMacro mit dem Präfix `[Hintergrund …]`.
-`interval()` läuft ebenfalls im Hintergrund (mind. 10 s); `appStart()` nur bei geöffnetem EveryMacro.
+Hintergrund-Logs erscheinen beim nächsten Öffnen von MacroScrapp mit dem Präfix `[Hintergrund …]`.
+`interval()` läuft ebenfalls im Hintergrund (mind. 10 s); `appStart()` nur bei geöffnetem MacroScrapp.
 
 ## Bluetooth-Geräte & Matching
 
@@ -551,7 +553,7 @@ oder der **MAC-Adresse** ist (Groß-/Kleinschreibung egal, Leerzeichen am Rand e
 `ctx.device` enthält: `name` (Original), `alias` (eigener Name), `address` (MAC), `type` (classic/le/dual), `bondState`,
 `majorClass` (z.B. `AUDIO_VIDEO`), `deviceClass`, `uuids`, `connected`.
 
-Im Bereich **„Bluetooth-Geräte“** in EveryMacro: „Laden“ zeigt die verbundenen Geräte, „📋 Für KI kopieren“ kopiert alle Infos als Text,
+Im Bereich **„Bluetooth-Geräte“** in MacroScrapp: „Laden“ zeigt die verbundenen Geräte, „📋 Für KI kopieren“ kopiert alle Infos als Text,
 den du deiner KI zum Erstellen eines Makros geben kannst.
 
 ### `ctx.copy(text)`
@@ -560,7 +562,7 @@ Kopiert Text in die Zwischenablage (im Vordergrund und im Hintergrund).
 ## Netzwerk-Info & Denon-Info
 
 Im Bereich **„Netzwerk-Info“**:
-- **Laden**: eigene IP (per WebRTC, kann „?“ sein), vermutetes Gateway (x.y.z.1 / 192.168.178.1). Der WLAN-Name ist erst ab dem nächsten EveryApp-Build verfügbar (`EveryAppBridge.network.getInfo()`), bis dahin steht dort „nicht verfügbar“.
+- **Laden**: eigene IP (per WebRTC, kann „?“ sein), vermutetes Gateway (x.y.z.1 / 192.168.178.1). Der WLAN-Name ist erst ab dem nächsten OpenScr-Build verfügbar (`OpenScrBridge.network.getInfo()`), bis dahin steht dort „nicht verfügbar“.
 - **Netz scannen**: fragt x.y.z.1–254 per HTTP (Port 80, 800 ms Timeout, 20 parallel) ab und zeigt antwortende Geräte mit Server-Header und Seitentitel.
 - **Geräte-IP + Abfragen** (Standard 192.168.178.20, wird gespeichert): Bei einem Denon/Marantz-AVR werden Power, aktuelle Quelle (intern und umbenannt), Lautstärke und alle Quellen (`intern -> angezeigter Name`) gelesen,
   über `formMainZone_MainZoneXml.xml`, `formMainZone_MainZoneXmlStatus.xml` und `POST /goform/AppCommand.xml`
@@ -575,7 +577,7 @@ if (src !== "DVD") await ctx.http.get("http://192.168.178.20/goform/formiPhoneAp
 ```
 SI-Befehle verwenden immer den **internen** Namen: SIDVD, SITV, SISAT/CBL, SIBD, SIGAME, SIMPLAY, SIBT, SINET, SITUNER …
 
-## Media-Steuerung (ab nächstem EveryApp-Build)
+## Media-Steuerung (ab nächstem OpenScr-Build)
 `await ctx.media.play()`, `pause()`, `toggle()`, `next()`, `previous()`, `stop()` – sendet Medientasten an den gerade aktiven Player (wie Kopfhörer-Tasten).
 Vorher wirft das den Fehler „Media-Steuerung braucht nächsten Build“. Welche App gerade spielt, lässt sich nicht abfragen.
 
@@ -588,11 +590,11 @@ if (ctx.trigger.type === 'manual') ctx.log('Von Hand gestartet');
 ## `ctx.bluetooth`
 - `await ctx.bluetooth.getConnectedDevices()` → Liste `{name, alias, address, ...}`
 - `await ctx.bluetooth.isConnected("Denon_AmHasen")` → true/false (Name, Alias oder MAC; Groß-/Kleinschreibung egal)
-Mit der aktuellen EveryApp nur eingeschränkt (nur gekoppelte Geräte, kein Alias); ab dem nächsten Build vollständig.
+Mit der aktuellen OpenScr nur eingeschränkt (nur gekoppelte Geräte, kein Alias); ab dem nächsten Build vollständig.
 
 ## `ctx.vars` und `ctx.globals` (dauerhaft)
 - `ctx.vars` gehört **zu einem Makro** (Speicher-Schlüssel `macro_vars_<Makro-ID>`). Die Werte bleiben über Ausführungen, App-Neustarts
-  und zwischen Vordergrund (EveryMacro offen) und Hintergrund (EveryApp-Engine) erhalten, weil beide denselben Schlüssel nutzen.
+  und zwischen Vordergrund (MacroScrapp offen) und Hintergrund (OpenScr-Engine) erhalten, weil beide denselben Schlüssel nutzen.
 - `ctx.globals` wird von **allen Makros** geteilt (Schlüssel `macro_globals`), ebenfalls dauerhaft.
 - Nur JSON-fähige Werte (Zahl, Text, Bool, Objekt/Array). Zugewiesene Werte werden sofort gespeichert (`delete ctx.vars.x` löscht).
 - Werden zwei Makros gleichzeitig ausgeführt, kann bei `ctx.globals` die letzte Speicherung gewinnen.
@@ -602,11 +604,11 @@ ctx.vars.count = (ctx.vars.count || 0) + 1;
 ctx.globals.lastDenonOn = Date.now();
 ```
 
-## Quick-Settings-Kachel: `quickTile("Name")` (ab nächstem EveryApp-Build)
+## Quick-Settings-Kachel: `quickTile("Name")` (ab nächstem OpenScr-Build)
 ```js
 macro({ name: "Denon an (Kachel)", triggers: [quickTile("Denon an")], actions: async (ctx) => { /* ... */ } });
 ```
-Läuft über den EveryApp-Hintergrund (Hintergrundmodus muss an sein). EveryApp hat 5 Kacheln („EveryApp 1“ bis „EveryApp 5“); jeder Name bekommt automatisch eine Kachel,
+Läuft über den OpenScr-Hintergrund (Hintergrundmodus muss an sein). OpenScr hat 5 Kacheln („OpenScr 1“ bis „OpenScr 5“); jeder Name bekommt automatisch eine Kachel,
 die dann diesen Namen trägt. Einmalig in den Schnelleinstellungen über „Bearbeiten“ hinzufügen. Maximal 5 verschiedene Namen.
 
 ## Kacheln, Kachel-Menü, Homescreen-Widgets, WLAN-Access-Point (braucht nächsten Build)
@@ -649,20 +651,20 @@ macro({
 });
 ```
 
-- **`tile({slot?, icon, label, state, subtitle?, menu?})`**: Schnelleinstellungs-Kachel „EveryApp 1–5“. Ohne `slot` wird der nächste freie Slot genommen; explizite Slots haben Vorrang vor `quickTile`-Slots. Eine Kachel **ohne** `menu` löst beim Tippen `quickTile(label)` aus. Eine Kachel **mit** `menu` öffnet einen kleinen nativen Dialog. Knöpfe schließen den Dialog (außer bei `keepOpen: true`). Slider feuern beim Loslassen und merken sich ihren Wert.
-- **`widget({id, size:'small'|'large', title?, columns?, items})`**: Es gibt zwei Widget-Typen: „EveryApp klein“ (2×1) und „EveryApp groß“ (4×2). Beide sind in der Größe veränderbar. Hast du mehrere Widget-Configs, fragt Android beim Platzieren, welche angezeigt wird. Knöpfe lösen `widgetAction` aus. Ein Slider-Feld öffnet beim Tippen den Dialog mit einem echten Slider.
+- **`tile({slot?, icon, label, state, subtitle?, menu?})`**: Schnelleinstellungs-Kachel „OpenScr 1–5“. Ohne `slot` wird der nächste freie Slot genommen; explizite Slots haben Vorrang vor `quickTile`-Slots. Eine Kachel **ohne** `menu` löst beim Tippen `quickTile(label)` aus. Eine Kachel **mit** `menu` öffnet einen kleinen nativen Dialog. Knöpfe schließen den Dialog (außer bei `keepOpen: true`). Slider feuern beim Loslassen und merken sich ihren Wert.
+- **`widget({id, size:'small'|'large', title?, columns?, items})`**: Es gibt zwei Widget-Typen: „OpenScr Widget (klein)“ (2×1) und „OpenScr Widget (groß)“ (4×2). Beide sind in der Größe veränderbar. Hast du mehrere Widget-Configs, fragt Android beim Platzieren, welche angezeigt wird. Knöpfe lösen `widgetAction` aus. Ein Slider-Feld öffnet beim Tippen den Dialog mit einem echten Slider.
 - **Icons**: Eingebaut sind `power tv music volume_up volume_down volume_mute speaker lightbulb home play pause stop next previous bluetooth wifi star heart add remove check close headset movie game bolt lock car circle input menu`. Du kannst auch `data:image/png;base64,…` oder eine `https://…`-URL angeben (wird einmal geladen). Unbekannte Namen werden als erster Buchstabe angezeigt.
 - **Trigger**: `tileMenu(id?)` und `widgetAction(id?)`. Ohne id reagiert der Trigger auf alle Einträge. Im Makro stehen dann `ctx.trigger.id`, `ctx.trigger.value` (bei Slidern), `ctx.trigger.slot` (Kachel) und `ctx.trigger.widgetId` zur Verfügung.
 - **Laufzeit-API**:
   - `ctx.tile.setState(slot|label, 'on'|'off')`, `ctx.tile.setLabel(…)`, `ctx.tile.setIcon(…)`, `ctx.tile.update(slot, patch)`
   - `ctx.widget.update(id, { title, items: { vol: { value: 40 }, power: { state: 'on' } } })`
-- Kacheln musst du selbst hinzufügen: Schnelleinstellungen → Stift → „EveryApp N“. Widgets fügst du selbst über Homescreen → Widgets → EveryApp hinzu.
+- Kacheln musst du selbst hinzufügen: Schnelleinstellungen → Stift → „OpenScr N“. Widgets fügst du selbst über Homescreen → Widgets → OpenScr hinzu.
 
 ### WLAN / Access Point (Fritzbox vs. Repeater)
 - `await ctx.wifi.info()` liefert `{ ssid, bssid, rssi, frequency, linkSpeed, ip, error? }`. Auf der aktuellen APK kommt `{ssid:null, bssid:null, error}`.
-- Trigger `wifiChanged(bssid?)` feuert, wenn der Access Point (BSSID) oder die SSID wechselt. Das funktioniert auch im Hintergrund über den EveryApp-Vordergrunddienst. Die Werte stehen dann in `ctx.trigger.bssid`, `ssid`, `rssi`, `frequency`, `prevBssid` und `prevSsid`. Der erste Wert nach dem Start des Dienstes wird nur gemerkt und löst nichts aus. `wifiChanged('aa:bb:…')` filtert auf eine BSSID oder einen SSID-Namen.
-- **Berechtigungen**: Android verrät SSID und BSSID nur mit *genauem Standort*. Im Hintergrund brauchst du zusätzlich *Standort „Immer zulassen“*, und der Standort muss am Handy eingeschaltet sein. `EveryAppBridge.network.requestLocation(true)` fragt in zwei Schritten: Zuerst erklärt es, wofür der Standort gebraucht wird, und fragt den genauen Standort ab. Danach führt es zur Einstellungsseite für „Immer zulassen“, denn ab Android 11 geht das nur über die Einstellungen.
-- Die BSSID siehst du unter EveryMacro → Netzwerk-Info → „Für KI kopieren“.
+- Trigger `wifiChanged(bssid?)` feuert, wenn der Access Point (BSSID) oder die SSID wechselt. Das funktioniert auch im Hintergrund über den OpenScr-Vordergrunddienst. Die Werte stehen dann in `ctx.trigger.bssid`, `ssid`, `rssi`, `frequency`, `prevBssid` und `prevSsid`. Der erste Wert nach dem Start des Dienstes wird nur gemerkt und löst nichts aus. `wifiChanged('aa:bb:…')` filtert auf eine BSSID oder einen SSID-Namen.
+- **Berechtigungen**: Android verrät SSID und BSSID nur mit *genauem Standort*. Im Hintergrund brauchst du zusätzlich *Standort „Immer zulassen“*, und der Standort muss am Handy eingeschaltet sein. `OpenScrBridge.network.requestLocation(true)` fragt in zwei Schritten: Zuerst erklärt es, wofür der Standort gebraucht wird, und fragt den genauen Standort ab. Danach führt es zur Einstellungsseite für „Immer zulassen“, denn ab Android 11 geht das nur über die Einstellungen.
+- Die BSSID siehst du unter MacroScrapp → Netzwerk-Info → „Für KI kopieren“.
 
 ```js
 // BSSIDs aus "Netzwerk-Info" eintragen
@@ -692,7 +694,7 @@ Auf der aktuellen APK wirft jede `ctx.ble.*`-Funktion den Fehler „BLE braucht 
 - `await ctx.ble.read(addr, svc, chr)` liefert `{ hex, bytes }`.
 - `await ctx.ble.notify(addr, svc, chr, true)` schaltet Benachrichtigungen ein. Der Trigger `bleNotify(addr?, charUuid?)` liefert dann `ctx.trigger.hex`, `ctx.trigger.bytes` (gleich `ctx.trigger.value`), `address`, `serviceUuid` und `charUuid`.
 - `await ctx.ble.disconnect(addr)` trennt die Verbindung.
-- **Berechtigung**: „Geräte in der Nähe“ (BLUETOOTH_SCAN + BLUETOOTH_CONNECT). Der Standort wird dafür nicht gebraucht. Android fragt beim ersten Scan in EveryMacro → **BLE-Info**. Hintergrund-Makros fragen nicht nach, sondern melden einen Fehler, wenn die Berechtigung fehlt.
+- **Berechtigung**: „Geräte in der Nähe“ (BLUETOOTH_SCAN + BLUETOOTH_CONNECT). Der Standort wird dafür nicht gebraucht. Android fragt beim ersten Scan in MacroScrapp → **BLE-Info**. Hintergrund-Makros fragen nicht nach, sondern melden einen Fehler, wenn die Berechtigung fehlt.
 - **BLE-Info**: Scannen, auf ein Gerät tippen, dann siehst du alle Services, Characteristics, Eigenschaften und lesbaren Werte. Mit „Für KI kopieren“ kopierst du das Ergebnis.
 - Die meisten LED-Controller erlauben **nur eine Verbindung**. Die MeRGBW-App muss also geschlossen bzw. getrennt sein.
 
@@ -728,14 +730,14 @@ macro({
 ```
 
 ### BLE: Berechtigung und automatisches Neu-Abonnieren
-- Eine Mini-App braucht `"ble"` in den `permissions` ihres Manifests (`everyapp.json`). EveryMacro hat das deklariert, EveryApp fragt beim nächsten Start einmal nach. Ohne diese Berechtigung kommt der Fehler „BLE nicht erlaubt …“.
-- `ctx.ble.notify(addr, svc, chr, true)` merkt sich das Abo dauerhaft. Bricht die Verbindung ab oder startet EveryApp neu, verbindet EveryApp automatisch wieder und abonniert neu, mit wachsender Wartezeit bis maximal 5 Minuten. Ein Neu-Abonnieren per `appStart`/`interval` ist nicht mehr nötig.
+- Eine OpenScrapp braucht `"ble"` in den `permissions` ihres Manifests (`openscr.json`, Fallback `everyapp.json`). MacroScrapp hat das deklariert, OpenScr fragt beim nächsten Start einmal nach. Ohne diese Berechtigung kommt der Fehler „BLE nicht erlaubt …“.
+- `ctx.ble.notify(addr, svc, chr, true)` merkt sich das Abo dauerhaft. Bricht die Verbindung ab oder startet OpenScr neu, verbindet OpenScr automatisch wieder und abonniert neu, mit wachsender Wartezeit bis maximal 5 Minuten. Ein Neu-Abonnieren per `appStart`/`interval` ist nicht mehr nötig.
 - `ctx.ble.notify(…, false)` entfernt das Abo. `ctx.ble.disconnect(addr)` pausiert die automatische Wiederverbindung bis zum nächsten `connect`/`notify`.
 
 ## Tuya / Smart Life lokal (LAN, ohne Internet) – braucht nächsten Build
 
 Steuert Tuya-Geräte (z.B. Deckenlampe) direkt im WLAN über Port 6668, Protokoll 3.3 / 3.4 / 3.5.
-Benötigt die Permission **`net`** (steht in `everyapp.json`; EveryApp fragt beim nächsten Start nach).
+Benötigt die Permission **`net`** (steht in `openscr.json` und im Fallback `everyapp.json`; OpenScr fragt beim nächsten Start nach).
 Auf der alten APK werfen alle Aufrufe `… braucht nächsten Build` (kein Absturz).
 
 **localKey besorgen:** einmalig mit [tinytuya](https://github.com/jasonacox/tinytuya) `python -m tinytuya wizard`
@@ -801,16 +803,17 @@ macro({
 - **Fehlt ein Secret beim Ausführen:** Fehler `Secret TUYA_SECRET fehlt` mit Button „🔑 jetzt eintragen“.
 - `ctx.secrets` ist schreibgeschützt und funktioniert in der App und in Hintergrund-Tasks.
 - Secret-Werte werden im Log (App und Hintergrund) durch `•••` ersetzt und stehen in keinem „Für KI kopieren“-Block.
-- ⚠️ **LITE:** Aktuell werden Secrets **unverschlüsselt** app-intern in EveryApp gespeichert (nicht für andere Apps lesbar, aber nicht im Keystore). Mit dem nächsten EveryApp-Build werden sie automatisch in den Android Keystore (expo-secure-store) migriert.
+- ⚠️ **LITE:** Aktuell werden Secrets **unverschlüsselt** app-intern in OpenScr gespeichert (nicht für andere Apps lesbar, aber nicht im Keystore). Mit dem nächsten OpenScr-Build werden sie automatisch in den Android Keystore (expo-secure-store) migriert.
 - Erlaubte Keys: `A-Z a-z 0-9 _ . -`, max. 64 Zeichen.
 
 ## 🔗 Makros per Link importieren
 
 **Formate** (nur `https`):
-- Deep-Link: `everyapp://everymacro/import?url=<URL-encodete https-Raw-URL>` oder `everyapp://everymacro/import?gist=<gist-id>`
-  (auf Dev-Client-Builds auch `exp+everyapp://everymacro/import?...`). Braucht den nächsten nativen Build (Scheme `everyapp`).
+- Deep-Link: `openscr://macroscrapp/import?url=<URL-encodete https-Raw-URL>` oder `openscr://macroscrapp/import?gist=<gist-id>`
+  (auf Dev-Client-Builds auch `exp+openscr://macroscrapp/import?...`, Scheme `openscr`).
+  Ältere Container akzeptieren weiterhin `everyapp://everymacro/import?...` und `exp+everyapp://everymacro/import?...`.
 - Ohne Deep-Link (geht sofort): Im Abschnitt *Makros* URL ins Feld → **Import**, oder **📋 Aus Zwischenablage importieren**.
-  Akzeptiert: `https://…` Raw-URL, `https://gist.github.com/<user>/<id>`, nackte Gist-ID, einen `everyapp://…`-Link oder direkt den Makro-Code.
+  Akzeptiert: `https://…` Raw-URL, `https://gist.github.com/<user>/<id>`, nackte Gist-ID, einen `openscr://…`- oder `everyapp://…`-Link oder direkt den Makro-Code.
 - Gist: geladen über `https://api.github.com/gists/<id>`; genommen wird die erste Datei `*.macro.js`/`*.macro.json`, sonst die erste Datei.
 - Inhalt: Makro-Code (`macro({...})`) oder JSON `{"code":"macro({...})"}` bzw. ein Array davon (mehrere Makros).
 
@@ -830,10 +833,10 @@ Fehler (HTTP-Status, kein https, ungültiges Makro) erscheinen in einer roten Bo
 1. Im Abschnitt **Makros** findest du unter dem normalen Import-Feld den neuen Bereich **„📁 GitHub-Ordner importieren"**
 2. Gib die URL zu einem GitHub-Ordner ein, z.B.:
    ```
-   https://github.com/Krust3nKaese3/EveryMacro/tree/main/my-macros
+   https://github.com/Krust3nKaese3/MacroScrapp/tree/main/my-macros
    ```
 3. Klicke auf **„Importieren"**
-4. EveryMacro lädt alle `.js`-Dateien aus dem Ordner und importiert sie einzeln
+4. MacroScrapp lädt alle `.js`-Dateien aus dem Ordner und importiert sie einzeln
 5. Du siehst eine Zusammenfassung: wie viele Makros importiert/aktualisiert/fehlgeschlagen wurden
 6. Bei Fehlern kannst du die Fehlermeldungen kopieren
 
@@ -843,10 +846,10 @@ Fehler (HTTP-Status, kein https, ungültiges Makro) erscheinen in einer roten Bo
 
 **Deep-Link:** Der GitHub-Ordner-Import funktioniert auch per Deep-Link:
 ```
-everyapp://everymacro/import?url=https://github.com/user/repo/tree/main/folder
+openscr://macroscrapp/import?url=https://github.com/user/repo/tree/main/folder
 ```
 
-**Dev-Umgebung:** Wenn EveryMacro in einem Entwicklungs-Build von EveryApp (z.B. `SrvEveryApp` mit Expo Dev-Server) läuft, wird das URL-Feld automatisch mit `https://github.com/Krust3nKaese3/EveryMacro/tree/main/my-macros` vorausgefüllt.
+**Dev-Umgebung:** Wenn MacroScrapp in einem Entwicklungs-Build von OpenScr (z.B. `SrvOpenScr` mit Expo Dev-Server) läuft, wird das URL-Feld automatisch mit `https://github.com/Krust3nKaese3/MacroScrapp/tree/main/my-macros` vorausgefüllt.
 
 **Update-Logik:**
 - Makros mit demselben `id` werden aktualisiert (Secrets und `ctx.vars` bleiben erhalten)
@@ -857,7 +860,7 @@ everyapp://everymacro/import?url=https://github.com/user/repo/tree/main/folder
 ## 🪟 Popups (Overlay-Fenster) – braucht nächsten Build, Permission `popup`
 
 Ein Popup ist ein frei gestaltbares Overlay-Fenster mit eigenem HTML/JS. Öffnet sich per Quick-Tile, Widget-Knopf
-oder `ctx.popup.open()` (nur wenn EveryApp im Vordergrund ist).
+oder `ctx.popup.open()` (nur wenn OpenScr im Vordergrund ist).
 
 **Spec:** `{ id, html | url (nur https), title?, state?: {…}, throttleMs?: 300, style?: {…} }`
 
@@ -876,8 +879,9 @@ oder `ctx.popup.open()` (nur wenn EveryApp im Vordergrund ist).
 
 **Binden:** `tile({ label, icon, popup: spec })` oder Widget-Knopf `{ type: "button", id, label, popup: spec }`.
 
-**Im Popup-HTML:** `EveryAppPopup.send(event, value)`, `EveryAppPopup.state` (zuletzt gespeicherter Zustand),
-`EveryAppPopup.onMessage(d => …)`, `EveryAppPopup.close()`, `EveryAppPopup.resize()`.
+**Im Popup-HTML:** `OpenScrPopup.send(event, value)`, `OpenScrPopup.state` (zuletzt gespeicherter Zustand),
+`OpenScrPopup.onMessage(d => …)`, `OpenScrPopup.close()`, `OpenScrPopup.resize()`.
+`window.EveryAppPopup` ist dasselbe Objekt und der Alias älterer Builds.
 
 **Im Makro:** Trigger `popupEvent(popupId?, event?)` → `ctx.trigger = { type: "popup", popupId, event, value }`
 (pro Event gedrosselt, Standard 300 ms; beim Schließen `event: "close"`).
@@ -930,7 +934,7 @@ macro({
 - `state`: `"active"` · `"inactive"` · `"unavailable"` (auch `"on"/"off"`/true/false)
 - `subtitle`: Android 10+ (älter: ignoriert)
 - `icon`: Name (`lightbulb, power, bolt, tv, wifi, music, play, pause, home, lock, star, heart, car, speaker, …`; Material-Aliase wie `power_settings_new`, `play_arrow`),
-  Pfad im Mini-App-Repo (`icons/lamp.png`), `https://…png`, `data:image/png;base64,…` oder SVG (`<svg…>`/`.svg`, nur im Vordergrund – im Hintergrund PNG/Name nutzen).
+  Pfad im OpenScrapp-Repo (`icons/lamp.png`), `https://…png`, `data:image/png;base64,…` oder SVG (`<svg…>`/`.svg`, nur im Vordergrund – im Hintergrund PNG/Name nutzen).
   Das Bild wird zur weißen Maske; Android färbt es selbst ein.
-- Eine Kachel gehört der Mini-App, die sie belegt; andere Mini-Apps bekommen einen Fehler. Bleibt nach Neustart erhalten.
+- Eine Kachel gehört der OpenScrapp, die sie belegt; andere OpenScrapps bekommen einen Fehler. Bleibt nach Neustart erhalten.
 - Alt weiterhin: `ctx.tile.setState(slotOderName, "on")` usw.

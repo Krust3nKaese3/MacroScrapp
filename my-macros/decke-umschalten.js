@@ -4,14 +4,14 @@
  * Zweck: Schaltet die Tuya/Smart-Life-Deckenlampe per Knopfdruck um
  *        (an -> aus, aus -> an) über die Tuya-Cloud-API.
  *
- * Auslöser: manual() – Test-Button bzw. manueller Start in EveryMacro
+ * Auslöser: manual() – Test-Button bzw. manueller Start in MacroScrapp
  *
  * Ablauf: Token holen -> aktuellen Status lesen (switch_led) -> invertieren -> Befehl senden.
  *         Signatur (HMAC-SHA256) ist in reinem JS implementiert.
  *
  * Voraussetzungen:
  *   - Internet (läuft über die Tuya-Cloud, Rechenzentrum EU)
- *   - Secret TUYA_SECRET in EveryMacro hinterlegen (wird beim ersten Start abgefragt)
+ *   - Secret TUYA_SECRET in MacroScrapp hinterlegen (wird beim ersten Start abgefragt)
  *
  * Platzhalter ausfüllen:
  *   TUYA_ACCESS_ID  -> iot.tuya.com > Cloud > Projekt > Overview (Access ID)

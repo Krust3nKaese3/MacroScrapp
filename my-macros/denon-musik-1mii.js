@@ -21,7 +21,7 @@
  *
  * Voraussetzungen:
  *   - Denon-AVR mit fester IP im Router (DHCP-Reservierung)
- *   - Quick-Tile-Trigger braucht den nativen EveryApp-Build
+ *   - Quick-Tile-Trigger braucht den nativen OpenScr-Build
  *
  * Platzhalter ausfüllen:
  *   DENON_IP    -> IP des Receivers (FRITZ!Box > Heimnetz > Netzwerk)

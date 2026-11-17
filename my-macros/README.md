@@ -1,6 +1,6 @@
 # Meine Makros (Backup)
 
-Dokumentierte Sicherung meiner EveryMacro-Makros. Alle privaten Daten wurden durch Platzhalter ersetzt.
+Dokumentierte Sicherung meiner MacroScrapp-Makros. Alle privaten Daten wurden durch Platzhalter ersetzt.
 
 | Name | Datei | Zweck | Auslöser | Voraussetzungen |
 |---|---|---|---|---|
@@ -77,19 +77,19 @@ Oben in jeder Datei stehen Konstanten. Ersetze die Werte in `<…>`:
 
 | Platzhalter | Bedeutung | Wo finde ich den Wert? |
 |---|---|---|
-| `<DEIN_WLAN_NAME>` | Name (SSID) deines Heim-WLANs | EveryMacro → Netzwerk-Info → „WLAN-Name" |
-| `<BSSID_OBEN_1>` … `<BSSID_OBEN_3>` | Funkadressen der Access Points/Repeater im Raum, in dem das Licht angehen soll (pro Funkband eine eigene) | Im jeweiligen Raum EveryMacro → Netzwerk-Info → „Access Point (BSSID)"; für 2,4 und 5 GHz einzeln ablesen. Nicht benötigte Einträge aus der Liste entfernen |
+| `<DEIN_WLAN_NAME>` | Name (SSID) deines Heim-WLANs | MacroScrapp → Netzwerk-Info → „WLAN-Name" |
+| `<BSSID_OBEN_1>` … `<BSSID_OBEN_3>` | Funkadressen der Access Points/Repeater im Raum, in dem das Licht angehen soll (pro Funkband eine eigene) | Im jeweiligen Raum MacroScrapp → Netzwerk-Info → „Access Point (BSSID)"; für 2,4 und 5 GHz einzeln ablesen. Nicht benötigte Einträge aus der Liste entfernen |
 | `<TUYA_ACCESS_ID>` | Access ID / Client ID des Tuya-Cloud-Projekts | iot.tuya.com → Cloud → Projekt → Overview |
 | `<TUYA_DEVICE_ID>` | Geräte-ID der Lampe | iot.tuya.com → Projekt → Devices (oder Smart-Life-App → Gerät → Geräteinformationen) |
 | `<STREIFEN_BT_MAC>` | Bluetooth-Adresse des MeRGBW-LED-Streifens | Android → Einstellungen → Verbundene Geräte → Streifen → Details (oder nRF Connect scannen) |
 | `<DENON_IP>` | IP-Adresse des Denon-Receivers | Router (z. B. FRITZ!Box → Heimnetz → Netzwerk); dort feste IP vergeben |
 | `<1MII_BT_MAC>` | Bluetooth-Adresse des 1Mii-Senders | Android → Einstellungen → Verbundene Geräte → 1Mii → Details |
 
-Das **Tuya Access Secret** gehört nie in den Code. Es wird als Secret `TUYA_SECRET` in EveryMacro gespeichert und im Makro über `ctx.secrets.TUYA_SECRET` gelesen.
+Das **Tuya Access Secret** gehört nie in den Code. Es wird als Secret `TUYA_SECRET` in MacroScrapp gespeichert und im Makro über `ctx.secrets.TUYA_SECRET` gelesen.
 
 ## Wiederherstellen
 
-1. Inhalt der `.js`-Datei kopieren und in EveryMacro als neues Makro einfügen.
+1. Inhalt der `.js`-Datei kopieren und in MacroScrapp als neues Makro einfügen.
 2. Platzhalter oben in der Datei ausfüllen (siehe Tabelle).
 3. Beim Speichern das Secret `TUYA_SECRET` eingeben (Tuya Access Secret aus iot.tuya.com → Projekt → Overview) – nur für Tuya-Makros.
 4. Für WLAN-Auslöser: Standortberechtigung auf „Immer zulassen" stellen, sonst ist die BSSID im Hintergrund nicht lesbar.
@@ -109,6 +109,8 @@ Kachel „Decke“ in den Schnelleinstellungen. Ein Tipp öffnet ein dezentes Po
 - `TUYA_SECRET` – Tuya Access Secret
 - `TUYA_DEVICE_ID` – Geräte-ID der Decke
 
-**Import:** `everyapp://everymacro/import?url=https%3A%2F%2Fraw.githubusercontent.com%2FKrust3nKaese3%2FEveryMacro%2Fmain%2Fmy-macros%2Fpopup-decke.js`
+**Import:** `openscr://macroscrapp/import?url=https%3A%2F%2Fraw.githubusercontent.com%2FKrust3nKaese3%2FMacroScrapp%2Fmain%2Fmy-macros%2Fpopup-decke.js`
 
-**Kachel hinzufügen:** Hintergrundmodus in EveryApp an → Schnelleinstellungen herunterziehen → Stift → Kachel „EveryApp N“ (bzw. „Decke“) in den aktiven Bereich ziehen.
+Ältere Container akzeptieren weiterhin `everyapp://everymacro/import?url=…` mit derselben Raw-URL.
+
+**Kachel hinzufügen:** Hintergrundmodus in OpenScr an → Schnelleinstellungen herunterziehen → Stift → Kachel „OpenScr N“ (bzw. „Decke“) in den aktiven Bereich ziehen.
