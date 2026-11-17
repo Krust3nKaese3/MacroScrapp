@@ -12,7 +12,7 @@
  *            3) Helligkeit anhand Sonnenhöhe berechnen (graduelle Dämmerung)
  *            4) Tuya-Deckenlampe steuern (switch_led + bright_value_v2)
  *            5) MeRGBW-LED-Streifen per Bluetooth steuern (Handshake + Ein/Aus + Helligkeit)
- * Voraussetzungen: Native Build von EveryMacro, Standort "Immer zulassen"
+ * Voraussetzungen: Native Build von MacroScrapp, Standort "Immer zulassen"
  *            (für BSSID im Hintergrund), Secret TUYA_SECRET (Tuya Access Secret),
  *            Berechtigung "Geräte in der Nähe" für Bluetooth,
  *            nRF Connect und MeRGBW-App müssen geschlossen sein (Konflikt)

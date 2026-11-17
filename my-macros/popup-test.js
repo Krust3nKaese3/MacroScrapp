@@ -15,11 +15,12 @@ macro({
   var L = document.getElementById("l");
   function log(t){ L.textContent = new Date().toLocaleTimeString() + " " + t + "\\n" + L.textContent; }
   window.onerror = function(m){ log("JS-FEHLER: " + m); };
-  var P = window.EveryAppPopup;
-  log("EveryAppPopup vorhanden: " + !!P + (P ? " | id=" + P.id + " | send=" + typeof P.send : ""));
+  var P = window.OpenScrPopup || window.EveryAppPopup;
+  log("Popup-Bridge vorhanden: " + !!P + (P ? " | id=" + P.id + " | send=" + typeof P.send + " | " + (window.OpenScrPopup ? "OpenScrPopup" : "EveryAppPopup") : ""));
   function send(e, v){
-    if (!window.EveryAppPopup) { log("KEIN Bridge, " + e + " nicht gesendet"); return; }
-    try { window.EveryAppPopup.send(e, v); log("gesendet: " + e + " = " + JSON.stringify(v)); }
+    var popup = window.OpenScrPopup || window.EveryAppPopup;
+    if (!popup) { log("KEIN Bridge, " + e + " nicht gesendet"); return; }
+    try { popup.send(e, v); log("gesendet: " + e + " = " + JSON.stringify(v)); }
     catch (x) { log("send-FEHLER: " + x.message); }
   }
   if (P && P.onMessage) P.onMessage(function(d){ log("vom Makro: " + JSON.stringify(d)); });

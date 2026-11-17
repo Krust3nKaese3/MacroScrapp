@@ -37,19 +37,21 @@ macro({
     </div><script>
     (function(){
       var stub = { state: {}, send: function(){}, onMessage: function(){}, close: function(){} };
-      var B = function(){ return window.EveryAppPopup || stub; };
+      var B = function(){ return window.OpenScrPopup || window.EveryAppPopup || stub; };
       var P = B();
       var stt = function(t){ var el = document.getElementById("st"); if (el) el.textContent = t; };
       var raw = function(e, v){
         var msg = { type: "popup", popupId: "decke", event: e, value: v };
-        if (window.EveryAppPopup && typeof window.EveryAppPopup.send === "function") { window.EveryAppPopup.send(e, v); return "EveryAppPopup"; }
+        var popup = window.OpenScrPopup || window.EveryAppPopup;
+        if (popup && typeof popup.send === "function") { popup.send(e, v); return window.OpenScrPopup ? "OpenScrPopup" : "EveryAppPopup"; }
         if (window.ReactNativeWebView && window.ReactNativeWebView.postMessage) { window.ReactNativeWebView.postMessage(JSON.stringify(msg)); return "RNWebView"; }
+        if (window.OpenScr && typeof window.OpenScr.send === "function") { window.OpenScr.send(e, v); return "OpenScr"; }
         if (window.EveryApp && typeof window.EveryApp.send === "function") { window.EveryApp.send(e, v); return "EveryApp"; }
         if (window.parent && window.parent !== window) { window.parent.postMessage(msg, "*"); return "parent"; }
         return "";
       };
       var s = Object.assign({ on: false, bright: 80, hue: 20, mode: "white" }, P.state || {});
-      var go = function(e, v){ var w = ""; try { w = raw(e, v); } catch (x) { stt("Fehler: " + x.message); return; } stt(w ? "" : "Keine Verbindung zu EveryApp"); };
+      var go = function(e, v){ var w = ""; try { w = raw(e, v); } catch (x) { stt("Fehler: " + x.message); return; } stt(w ? "" : "Keine Verbindung zu OpenScr"); };
       var $ = function(i){ return document.getElementById(i); };
       var last = {}, timer = {};
       function send(e, v, now){ var t = Date.now(); clearTimeout(timer[e]); if (now || !last[e] || t - last[e] > 300) { last[e] = t; go(e, v); } else { timer[e] = setTimeout(function(){ last[e] = Date.now(); go(e, v); }, 300); } }
@@ -80,11 +82,11 @@ macro({
       $("bw").onclick = function(){ s.mode = "white"; s.on = true; draw(); send("white", true, true); };
       $("bc").onclick = function(){ s.mode = "colour"; s.on = true; draw(); send("hue", s.hue, true); };
       var hooked = false;
-      var hook = function(){ var b = window.EveryAppPopup; if (hooked || !b || typeof b.onMessage !== "function") return; hooked = true; if (b.state) Object.assign(s, b.state); b.onMessage(function(d){ Object.assign(s, d || {}); if (d && d.fehler) stt(d.fehler); draw(); }); draw(); };
+      var hook = function(){ var b = window.OpenScrPopup || window.EveryAppPopup; if (hooked || !b || typeof b.onMessage !== "function") return; hooked = true; if (b.state) Object.assign(s, b.state); b.onMessage(function(d){ Object.assign(s, d || {}); if (d && d.fehler) stt(d.fehler); draw(); }); draw(); };
       hook();
       draw();
       var tries = 0;
-      var start = function(){ hook(); if (window.EveryAppPopup || tries++ > 10) go("open", true); else setTimeout(start, 150); };
+      var start = function(){ hook(); if (window.OpenScrPopup || window.EveryAppPopup || tries++ > 10) go("open", true); else setTimeout(start, 150); };
       start();
     })();
     </script></body></html>`

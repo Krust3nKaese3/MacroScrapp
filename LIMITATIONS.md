@@ -1,21 +1,21 @@
-# EveryMacro - Limitationen und Einschränkungen
+# MacroScrapp - Limitationen und Einschränkungen
 
 ## Übersicht
 
-Dieses Dokument beschreibt die aktuellen Limitationen von EveryMacro und erklärt, welche Funktionen verfügbar sind bzw. welche zusätzliche EveryApp-Unterstützung benötigen.
+Dieses Dokument beschreibt die aktuellen Limitationen von MacroScrapp und erklärt, welche Funktionen verfügbar sind bzw. welche zusätzliche OpenScr-Unterstützung benötigen.
 
 ## Aktuelle Limitationen
 
 ### 1. Bluetooth-Trigger
 
-**Status:** ✅ VERFÜGBAR (ab EveryApp v2.0, PR #3)
+**Status:** ✅ VERFÜGBAR (ab OpenScr v2.0, PR #3)
 
-**Implementiert in:** https://github.com/Krust3nKaese3/EveryApp/pull/3
+**Implementiert in:** https://github.com/Krust3nKaese3/OpenScr/pull/3
 
 **APIs:**
-- ✅ `EveryAppBridge.events.on('bluetooth.connected', callback)`
-- ✅ `EveryAppBridge.events.on('bluetooth.disconnected', callback)`
-- ✅ `EveryAppBridge.bluetooth.getConnectedDevices()`
+- ✅ `OpenScrBridge.events.on('bluetooth.connected', callback)`
+- ✅ `OpenScrBridge.events.on('bluetooth.disconnected', callback)`
+- ✅ `OpenScrBridge.bluetooth.getConnectedDevices()`
 
 **Funktionen:**
 - Classic Bluetooth Events (nicht BLE)
@@ -28,12 +28,12 @@ Dieses Dokument beschreibt die aktuellen Limitationen von EveryMacro und erklär
 
 ### 2. App-Start-Trigger
 
-**Status:** ✅ VERFÜGBAR (ab EveryApp v2.0, PR #3)
+**Status:** ✅ VERFÜGBAR (ab OpenScr v2.0, PR #3)
 
-**Implementiert in:** https://github.com/Krust3nKaese3/EveryApp/pull/3
+**Implementiert in:** https://github.com/Krust3nKaese3/OpenScr/pull/3
 
 **APIs:**
-- ✅ `EveryAppBridge.events.on('app.start', callback)`
+- ✅ `OpenScrBridge.events.on('app.start', callback)`
 - ✅ Funktioniert im Vordergrund UND Hintergrund
 
 **Details:**
@@ -46,14 +46,14 @@ Dieses Dokument beschreibt die aktuellen Limitationen von EveryMacro und erklär
 
 ### 3. Interval-Trigger im Hintergrund
 
-**Status:** ✅ VERFÜGBAR (ab EveryApp v2.0, PR #3)
+**Status:** ✅ VERFÜGBAR (ab OpenScr v2.0, PR #3)
 
-**Implementiert in:** https://github.com/Krust3nKaese3/EveryApp/pull/3
+**Implementiert in:** https://github.com/Krust3nKaese3/OpenScr/pull/3
 
 **APIs:**
-- ✅ `EveryAppBridge.background.enable()`
-- ✅ `EveryAppBridge.background.disable()`
-- ✅ `EveryAppBridge.background.isEnabled()`
+- ✅ `OpenScrBridge.background.enable()`
+- ✅ `OpenScrBridge.background.disable()`
+- ✅ `OpenScrBridge.background.isEnabled()`
 
 **Details:**
 - Android Foreground Service mit persistenter Notification
@@ -67,13 +67,13 @@ Dieses Dokument beschreibt die aktuellen Limitationen von EveryMacro und erklär
 
 ### 4. Erweiterte HTTP-API
 
-**Status:** ✅ VERFÜGBAR (ab EveryApp v2.0, PR #3)
+**Status:** ✅ VERFÜGBAR (ab OpenScr v2.0, PR #3)
 
-**Implementiert in:** https://github.com/Krust3nKaese3/EveryApp/pull/3
+**Implementiert in:** https://github.com/Krust3nKaese3/OpenScr/pull/3
 
 **API:**
 ```javascript
-const response = await EveryAppBridge.http.request({
+const response = await OpenScrBridge.http.request({
   url: 'http://192.168.1.100/api',
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
@@ -96,9 +96,9 @@ const response = await EveryAppBridge.http.request({
 
 ### 5. Hintergrundmodus generell
 
-**Status:** ✅ VERFÜGBAR (ab EveryApp v2.0, PR #3)
+**Status:** ✅ VERFÜGBAR (ab OpenScr v2.0, PR #3)
 
-**Implementiert in:** https://github.com/Krust3nKaese3/EveryApp/pull/3
+**Implementiert in:** https://github.com/Krust3nKaese3/OpenScr/pull/3
 
 **Implementation:**
 - Android Foreground Service mit Notification
@@ -106,12 +106,12 @@ const response = await EveryAppBridge.http.request({
 - Alle Trigger laufen unbegrenzt im Hintergrund
 
 **User Experience:**
-- Persistent Notification: "EveryApp Running - Background mini-apps are active"
+- Persistente Benachrichtigung: "OpenScr aktiv"
 - Battery Optimization Dialog (einmalig)
 - Kann mit `background.disable()` gestoppt werden
 
 **Permissions:**
-- ✅ `background` in `everyapp.json`
+- ✅ `background` in `openscr.json` (und identisch in `everyapp.json`, Fallback)
 - ✅ User-Consent erforderlich
 
 **Keine Einschränkungen mehr!**
@@ -123,13 +123,13 @@ const response = await EveryAppBridge.http.request({
 **Status:** ✅ By Design (nicht geplant)
 
 **Grund:**
-EveryMacro ist bewusst **code-basiert** und für **AI-Generierung optimiert**. Ein grafischer Builder würde die Flexibilität einschränken und ist für den Use-Case nicht notwendig.
+MacroScrapp ist bewusst **code-basiert** und für **AI-Generierung optimiert**. Ein grafischer Builder würde die Flexibilität einschränken und ist für den Use-Case nicht notwendig.
 
 **Nutzung:**
 Benutzer lassen Makros von einem AI-Assistenten schreiben:
 
 **Beispiel-Prompt:**
-> "Erstelle ein EveryMacro, das bei Bluetooth-Verbindung mit 'MyCarAudio' eine HTTP POST-Anfrage an http://192.168.178.30/api/scene sendet mit Body {\"scene\":\"driving\"}."
+> "Erstelle ein MacroScrapp, das bei Bluetooth-Verbindung mit 'MyCarAudio' eine HTTP POST-Anfrage an http://192.168.178.30/api/scene sendet mit Body {\"scene\":\"driving\"}."
 
 AI generiert fertigen Code → Benutzer fügt ihn ein → Fertig.
 
@@ -151,10 +151,10 @@ HTTP-Requests von WebView aus unterliegen CORS-Policies. Viele externe APIs bloc
 **Workaround:**
 - Nur lokale Geräte/APIs verwenden (z.B. Smart Home im LAN)
 - APIs mit CORS-Support nutzen
-- Proxy-Server (außerhalb EveryApp-Scope)
+- Proxy-Server (außerhalb OpenScr-Scope)
 
 **Lösung:**
-EveryApp könnte HTTP-Requests über einen nativen Proxy ausführen (umgeht CORS), aber das hat Sicherheits-Implikationen.
+OpenScr könnte HTTP-Requests über einen nativen Proxy ausführen (umgeht CORS), aber das hat Sicherheits-Implikationen.
 
 ---
 
@@ -186,14 +186,14 @@ Würde UI-Komplexität erhöhen und ist für den Use-Case nicht kritisch.
 
 **Aktuell:**
 - ✅ Variablen bleiben zwischen Makro-Ausführungen erhalten
-- ✅ Überleben EveryMacro-Neuladen
-- ❌ Werden bei EveryApp-Neustart **möglicherweise** gelöscht (abhängig von Storage-Implementation)
+- ✅ Überleben MacroScrapp-Neuladen
+- ❌ Werden bei OpenScr-Neustart **möglicherweise** gelöscht (abhängig von Storage-Implementation)
 
 **Grund:**
-`EveryAppBridge.storage` verwendet `AsyncStorage`, sollte persistent sein - aber bei App-Cache-Löschen verloren gehen.
+`OpenScrBridge.storage` verwendet `AsyncStorage`, sollte persistent sein - aber bei App-Cache-Löschen verloren gehen.
 
 **Lösung:**
-EveryApp dokumentiert Storage-Persistenz-Garantien.
+OpenScr dokumentiert Storage-Persistenz-Garantien.
 
 ---
 
@@ -222,7 +222,7 @@ macro({
 
 ## Zusammenfassung: Was funktioniert JETZT?
 
-### ✅ ALLE Features vollständig verfügbar (ab EveryApp v2.0)
+### ✅ ALLE Features vollständig verfügbar (ab OpenScr v2.0)
 
 1. **Manual-Trigger:** "Jetzt testen" Button ✅
 2. **Bluetooth-Trigger:** bluetoothConnected/Disconnected ✅
@@ -245,7 +245,7 @@ macro({
 
 ## Roadmap: Feature-Status
 
-### ✅ Phase 1 & 2: ABGESCHLOSSEN (EveryApp v2.0)
+### ✅ Phase 1 & 2: ABGESCHLOSSEN (OpenScr v2.0)
 
 Alle Kern-Features sind implementiert und verfügbar:
 - ✅ Bluetooth-Trigger (PR #3)
@@ -256,7 +256,7 @@ Alle Kern-Features sind implementiert und verfügbar:
 
 **Status:** PRODUCTION-READY
 
-### Phase 3: **Erweiterte Features** (EveryMacro v2.0, optional)
+### Phase 3: **Erweiterte Features** (MacroScrapp v2.0, optional)
 - ⏳ Weitere Trigger (WiFi, Standort, Zeit-basiert)
 - ⏳ Makro-Prioritäten
 - ⏳ Makro-Sharing (QR-Code, Export/Import)
@@ -269,18 +269,18 @@ Alle Kern-Features sind implementiert und verfügbar:
 
 ## Update-Anleitung
 
-### Stelle sicher, dass du EveryApp v2.0 oder neuer verwendest
+### Stelle sicher, dass du OpenScr v2.0 oder neuer verwendest
 
 **So prüfst du:**
-1. Öffne EveryMacro in EveryApp
+1. Öffne MacroScrapp in OpenScr
 2. Keine Warnmeldung "Einige Funktionen fehlen" → Du hast v2.0+
-3. Mit Warnmeldung → Update EveryApp auf neueste Version
+3. Mit Warnmeldung → Update OpenScr auf neueste Version
 
-**Alle Features funktionieren ab EveryApp v2.0 (PR #3 gemerged).**
+**Alle Features funktionieren ab OpenScr v2.0 (PR #3 gemerged).**
 
-### Legacy-Workaround (nur für alte EveryApp-Versionen)
+### Legacy-Workaround (nur für alte OpenScr-Versionen)
 
-Falls du eine alte EveryApp-Version ohne PR #3 verwendest:
+Falls du eine alte OpenScr-Version ohne PR #3 verwendest:
 
 ```javascript
 macro({
@@ -288,7 +288,8 @@ macro({
   triggers: [interval(5000)],  // Alle 5 Sekunden
   actions: async (ctx) => {
     // Manual scan via existing API
-    const devices = await window.EveryAppBridge.bluetooth.scan();
+    const Bridge = window.OpenScrBridge || window.EveryAppBridge;
+    const devices = await Bridge.bluetooth.scan();
     const myDevice = devices.find(d => d.name === '1Mii');
     
     if (myDevice && !ctx.vars.wasConnected) {
@@ -311,7 +312,7 @@ macro({
 
 ## Für Entwickler: Implementierungs-Priorität
 
-**Empfohlene Reihenfolge für EveryApp-APIs:**
+**Empfohlene Reihenfolge für OpenScr-APIs:**
 
 1. **Event-System** (Basis für alles andere)
 2. **Bluetooth-Events** (höchster User-Value)
@@ -323,15 +324,15 @@ macro({
 
 ## Support & Feedback
 
-- **Limitationen unerwartet?** → GitHub Issue in EveryMacro-Repo
+- **Limitationen unerwartet?** → GitHub Issue in MacroScrapp-Repo
 - **Feature-Request?** → Issue mit Label "enhancement"
-- **Bridge-APIs fehlen?** → Issue in EveryApp-Repo
+- **Bridge-APIs fehlen?** → Issue in OpenScr-Repo
 
 ---
 
-**Letzte Aktualisierung:** 2024 (basierend auf EveryApp v1.0)
+**Letzte Aktualisierung:** 2024 (damals Container EveryApp v1.0). Aktueller Name des Containers: OpenScr.
 
-## Hintergrund (ab EveryApp mit nativem Makro-Task)
-- Bluetooth- und interval-Trigger laufen im Hintergrund (interval mind. 10 s); `appStart()` nur bei geöffnetem EveryMacro. Hintergrund-Code hat kein DOM/window.
-- Hintergrundmodus muss an sein (Benachrichtigung "EveryApp aktiv"). Akku-Optimierung für EveryApp auf "Nicht eingeschränkt" stellen.
+## Hintergrund (ab OpenScr mit nativem Makro-Task)
+- Bluetooth- und interval-Trigger laufen im Hintergrund (interval mind. 10 s); `appStart()` nur bei geöffnetem MacroScrapp. Hintergrund-Code hat kein DOM/window.
+- Hintergrundmodus muss an sein (Benachrichtigung "OpenScr aktiv"). Akku-Optimierung für OpenScr auf "Nicht eingeschränkt" stellen.
 - Nach "Beenden erzwingen" in den Android-Einstellungen startet nichts mehr, bis die App wieder geöffnet wird.

@@ -9,7 +9,7 @@
  *            3) MeRGBW-Handshake senden
  *            4) Ein/Aus-Befehl senden (CMD 0x01)
  *            5) Neuen Zustand in ctx.vars speichern
- * Voraussetzungen: Native Build von EveryMacro,
+ * Voraussetzungen: Native Build von MacroScrapp,
  *            Berechtigung "Geräte in der Nähe" für Bluetooth,
  *            nRF Connect und MeRGBW-App müssen geschlossen sein (Konflikt)
  * Gerät:     MeRGBW-Bluetooth-LED-Streifen (Service FFF0, Write FFF3, Notify FFF4)
@@ -26,7 +26,7 @@ macro({
   name: "Streifen umschalten (MeRGBW Bluetooth)",
   triggers: [ manual() ],
   actions: async (ctx) => {
-    // ctx.vars API-Wrapper (für Kompatibilität mit verschiedenen EveryMacro-Versionen)
+    // ctx.vars API-Wrapper (für Kompatibilität mit verschiedenen MacroScrapp-Versionen)
     const v = ctx.vars;
     const get = (k) => typeof v.get === "function" ? v.get(k) : v[k];
     const set = (k, x) => typeof v.set === "function" ? v.set(k, x) : (v[k] = x);

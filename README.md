@@ -1,6 +1,8 @@
-# EveryMacro
+# MacroScrapp
 
-**EveryMacro** ist eine Mini-App für [EveryApp](https://github.com/Krust3nKaese3/EveryApp), die MacroDroid-ähnliche Automatisierung ermöglicht. Erstelle Makros mit Triggern (z.B. Bluetooth-Verbindung), Bedingungen und Aktionen (HTTP-Requests, Benachrichtigungen, etc.).
+**MacroScrapp** ist eine OpenScrapp für [OpenScr](https://github.com/Krust3nKaese3/OpenScr) (Open Smartphone Code Runner), die MacroDroid-ähnliche Automatisierung ermöglicht. Erstelle Makros mit Triggern (z.B. Bluetooth-Verbindung), Bedingungen und Aktionen (HTTP-Requests, Benachrichtigungen, etc.).
+
+Der frühere Name dieser OpenScrapp war EveryMacro, der Container hieß EveryApp. Das Manifest liegt in `openscr.json`. `everyapp.json` hat denselben Inhalt und bleibt der Fallback für ältere installierte Builds. Die Bridge heißt `window.OpenScrBridge`. `window.EveryAppBridge` ist dasselbe Objekt und der Fallback, wenn ein älterer Build nur den alten Namen setzt.
 
 ## Features
 
@@ -14,17 +16,17 @@
 - ✅ **Manueller Test**: Makros jederzeit testen
 - ✅ **Einfache DSL**: JavaScript-basiert, AI-freundlich
 
-> **Alle Features verfügbar ab EveryApp v2.0** ([PR #3](https://github.com/Krust3nKaese3/EveryApp/pull/3))
+> **Alle Features verfügbar ab OpenScr v2.0** ([PR #3](https://github.com/Krust3nKaese3/OpenScr/pull/3))
 
-## Installation in EveryApp
+## Installation in OpenScr
 
-1. EveryApp öffnen
+1. OpenScr öffnen
 2. Repository-URL hinzufügen:
    ```
-   https://github.com/Krust3nKaese3/EveryMacro
+   https://github.com/Krust3nKaese3/MacroScrapp
    ```
 3. App laden und Berechtigungen gewähren
-4. EveryMacro ist bereit!
+4. MacroScrapp ist bereit!
 
 ## Verwendung
 
@@ -44,7 +46,7 @@
 #### 📁 GitHub-Ordner (NEU)
 - **Alle** `.js`-Makros aus einem GitHub-Ordner auf einmal importieren
 - URL-Format: `https://github.com/<owner>/<repo>/tree/<branch>/<path>`
-- Beispiel: `https://github.com/Krust3nKaese3/EveryMacro/tree/main/my-macros`
+- Beispiel: `https://github.com/Krust3nKaese3/MacroScrapp/tree/main/my-macros`
 - In Dev-Builds wird diese URL automatisch vorausgefüllt
 - Zeigt Zusammenfassung: importiert / aktualisiert / fehlgeschlagen
 - Siehe [MACROS.md](MACROS.md) für Details
@@ -57,7 +59,7 @@
 ### Hintergrundmodus
 
 - Toggle "Hintergrundmodus" aktivieren
-- Makros laufen auch wenn EveryApp geschlossen ist
+- Makros laufen auch wenn OpenScr geschlossen ist
 - Erforderlich für `appStart()` und `interval()` Trigger
 
 ## Beispiele
@@ -172,33 +174,35 @@ Siehe **[MACROS.md](MACROS.md)** für:
 
 ## Anforderungen
 
-### EveryApp v2.0 oder neuer
+### OpenScr v2.0 oder neuer
 
-**Erforderlich:** EveryApp mit [PR #3](https://github.com/Krust3nKaese3/EveryApp/pull/3) (Advanced Capabilities)
+**Erforderlich:** OpenScr mit [PR #3](https://github.com/Krust3nKaese3/OpenScr/pull/3) (Advanced Capabilities)
 
 **Alle benötigten Bridge-APIs sind implementiert:**
-- ✅ `EveryAppBridge.events.on('bluetooth.connected', callback)` - Classic Bluetooth Events
-- ✅ `EveryAppBridge.events.on('bluetooth.disconnected', callback)` - Classic Bluetooth Events
-- ✅ `EveryAppBridge.events.on('app.start', callback)` - App-Start-Event
-- ✅ `EveryAppBridge.bluetooth.getConnectedDevices()` - Aktuell verbundene Geräte
-- ✅ `EveryAppBridge.http.request({ url, method, headers, body, timeoutMs })` - Vollständige HTTP-API
-- ✅ `EveryAppBridge.background.enable/disable/isEnabled()` - Hintergrundmodus-Steuerung
-- ✅ `EveryAppBridge.storage.*` - Key-Value Storage
-- ✅ `EveryAppBridge.notifications.*` - Benachrichtigungen
-- ✅ `EveryAppBridge.vibration.*` - Vibration
+- ✅ `OpenScrBridge.events.on('bluetooth.connected', callback)` - Classic Bluetooth Events
+- ✅ `OpenScrBridge.events.on('bluetooth.disconnected', callback)` - Classic Bluetooth Events
+- ✅ `OpenScrBridge.events.on('app.start', callback)` - App-Start-Event
+- ✅ `OpenScrBridge.bluetooth.getConnectedDevices()` - Aktuell verbundene Geräte
+- ✅ `OpenScrBridge.http.request({ url, method, headers, body, timeoutMs })` - Vollständige HTTP-API
+- ✅ `OpenScrBridge.background.enable/disable/isEnabled()` - Hintergrundmodus-Steuerung
+- ✅ `OpenScrBridge.storage.*` - Key-Value Storage
+- ✅ `OpenScrBridge.notifications.*` - Benachrichtigungen
+- ✅ `OpenScrBridge.vibration.*` - Vibration
 
 **Feature Detection:**
-EveryMacro erkennt automatisch fehlende Features und zeigt Warnungen an, falls eine ältere EveryApp-Version verwendet wird.
+MacroScrapp erkennt automatisch fehlende Features und zeigt Warnungen an, falls eine ältere OpenScr-Version verwendet wird.
 
 ## Manifest
 
+`openscr.json` und `everyapp.json` (Fallback, gleicher Inhalt):
+
 ```json
 {
-  "name": "EveryMacro",
-  "version": "1.0.0",
+  "name": "MacroScrapp",
+  "version": "1.1.0",
   "description": "Automatisierung mit benutzerdefinierten Makros (JavaScript)",
   "entrypoint": "index.html",
-  "permissions": ["storage", "http", "bluetooth", "notifications", "vibration", "background"]
+  "permissions": ["storage", "http", "bluetooth", "notifications", "vibration", "background", "ble", "net", "popup", "tiles"]
 }
 ```
 
@@ -206,13 +210,13 @@ EveryMacro erkennt automatisch fehlende Features und zeigt Warnungen an, falls e
 
 - Makros laufen in einem eingeschränkten Scope (nur DSL-Funktionen verfügbar)
 - Kein direkter Zugriff auf DOM, andere Makros oder Bridge-Internals
-- HTTP-Requests unterliegen EveryApp-Berechtigungen
+- HTTP-Requests unterliegen OpenScr-Berechtigungen
 - Code-Validierung vor dem Speichern
 
 ## Einschränkungen
 
 1. **Bluetooth:** Nur Classic Bluetooth (nicht BLE) - für Auto, Kopfhörer, Smart Home Geräte
-2. **Plattform:** Android-only (EveryApp-Einschränkung, iOS folgt später)
+2. **Plattform:** Android-only (OpenScr-Einschränkung, iOS folgt später)
 3. **HTTP CORS:** Externe APIs können durch CORS blockiert werden (lokale Geräte funktionieren)
 4. **Keine UI-Builder** - Makros werden als Code eingefügt (designt für AI-Generierung)
 
@@ -223,11 +227,11 @@ Siehe [LIMITATIONS.md](LIMITATIONS.md) für Details.
 Diese App ist für AI-gestützte Makro-Erstellung optimiert. AI-Assistenten können Makros nach `MACROS.md` generieren:
 
 **Beispiel-Prompt:**
-> "Erstelle ein EveryMacro, das bei Verbindung mit meinem Auto-Bluetooth (Name: 'MyCarAudio') eine HTTP POST-Anfrage an http://192.168.178.30/api/scene mit Body {\"scene\":\"driving\"} sendet."
+> "Erstelle ein MacroScrapp, das bei Verbindung mit meinem Auto-Bluetooth (Name: 'MyCarAudio') eine HTTP POST-Anfrage an http://192.168.178.30/api/scene mit Body {\"scene\":\"driving\"} sendet."
 
 ## Entwicklung
 
-Das Projekt besteht aus einer einzelnen `index.html` mit inline JavaScript und CSS - optimiert für EveryApp's Loader-Format.
+Das Projekt besteht aus einer einzelnen `index.html` mit inline JavaScript und CSS - optimiert für OpenScr's Loader-Format.
 
 ## Lizenz
 
@@ -235,5 +239,5 @@ MIT License
 
 ---
 
-**Repository:** https://github.com/Krust3nKaese3/EveryMacro  
-**Für EveryApp:** https://github.com/Krust3nKaese3/EveryApp
+**Repository:** https://github.com/Krust3nKaese3/MacroScrapp  
+**Für OpenScr:** https://github.com/Krust3nKaese3/OpenScr

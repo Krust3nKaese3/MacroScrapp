@@ -1,0 +1,7 @@
+{
+  "name": "MacroScrapp",
+  "version": "1.1.0",
+  "description": "Automatisierung mit benutzerdefinierten Makros (JavaScript)",
+  "entrypoint": "index.html",
+  "permissions": ["storage", "http", "bluetooth", "notifications", "vibration", "background", "ble", "net", "popup", "tiles"]
+}
