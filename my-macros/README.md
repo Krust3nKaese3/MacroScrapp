@@ -8,6 +8,7 @@ Dokumentierte Sicherung meiner MacroScrapp-Makros. Alle privaten Daten wurden du
 | Streifen umschalten (MeRGBW Bluetooth) | [`streifen-umschalten.js`](streifen-umschalten.js) | MeRGBW-LED-Streifen per Knopf umschalten (an/aus, Zustand in ctx.vars) | `manual()` | Native Build, Berechtigung „Geräte in der Nähe", nRF Connect/MeRGBW-App geschlossen |
 | Decke umschalten (Tuya) | [`decke-umschalten.js`](decke-umschalten.js) | Tuya-Deckenlampe per Knopf umschalten (Status lesen, invertieren) | `manual()` | Secret `TUYA_SECRET` |
 | Denon Musik (1Mii) | [`denon-musik-1mii.js`](denon-musik-1mii.js) | Denon-Receiver an + Eingang DVD + Lautstärke 50, wenn der 1Mii-Bluetooth-Sender verbunden wird; beim Trennen vorherige Quelle/Lautstärke wiederherstellen bzw. Standby | Bluetooth verbunden/getrennt, Quick-Tile „Denon Musik" | Native Build, Denon im selben WLAN |
+| LG Developer Mode verlängern | [`lg-devmode-verlaengern.js`](lg-devmode-verlaengern.js) | Developer-Mode-Session des LG-Fernsehers (webOS) über developer.lge.com verlängern, Restzeit prüfen, Meldung bei Fehler oder unter 500 h | `interval(6 h)` (verlängert höchstens alle 24 h), `manual()` (Test) | Hintergrundmodus an, Internet, Secret `LG_DEVMODE_TOKEN` |
 
 ## Einstellungen
 
@@ -114,3 +115,17 @@ Kachel „Decke“ in den Schnelleinstellungen. Ein Tipp öffnet ein dezentes Po
 Ältere Container akzeptieren weiterhin `everyapp://everymacro/import?url=…` mit derselben Raw-URL.
 
 **Kachel hinzufügen:** Hintergrundmodus in OpenScr an → Schnelleinstellungen herunterziehen → Stift → Kachel „OpenScr N“ (bzw. „Decke“) in den aktiven Bereich ziehen.
+
+## LG Developer Mode verlängern
+
+Die Developer-Mode-Session auf LG-Fernsehern (webOS) läuft nach höchstens 1000 h ab, dann werden selbst installierte Apps deaktiviert. Das Makro ruft alle 24 h `ResetDevModeSession` auf und prüft danach mit `CheckDevModeSession` die Restzeit. Das läuft über das Internet, der Fernseher muss nicht im selben Netz sein.
+
+**Secret** (wird beim Speichern abgefragt, steht nie im Code):
+
+- `LG_DEVMODE_TOKEN` – 64-stelliger Session-Token. Auslesen im Dev-Manager-Terminal mit `cat /var/luna/preferences/devmode_enabled`.
+
+**Einstellungen im Makro:** `ABSTAND_H` (24, frühestens so oft verlängern) und `RESTZEIT_WARNUNG_H` (500, darunter kommt eine Warnung).
+
+**Benachrichtigung:** bei jedem Fehler und wenn die Restzeit nach der Verlängerung unter 500 h liegt. Der Test-Button (`manual()`) verlängert sofort und meldet die Restzeit.
+
+**Import:** `openscr://macroscrapp/import?url=https%3A%2F%2Fraw.githubusercontent.com%2FKrust3nKaese3%2FMacroScrapp%2Fmain%2Fmy-macros%2Flg-devmode-verlaengern.js`
